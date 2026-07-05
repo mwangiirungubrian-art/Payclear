@@ -1,3 +1,5 @@
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 import { supabase } from "../lib/supabase";
 
 export default async function JobsPage() {
@@ -6,31 +8,19 @@ export default async function JobsPage() {
     .select("*")
     .order("created_at", { ascending: false });
 
-  console.log("Jobs:", jobs, "Error:", error);
-
   if (error) {
     console.error(error);
   }
 
   return (
     <div className="min-h-screen bg-white font-sans">
+      <Navbar />
 
-      {/* Navbar */}
-      <nav className="flex items-center justify-between px-8 py-5 border-b border-gray-100">
-        <a href="/" className="text-2xl font-bold text-blue-600">PayClear</a>
-        <div className="flex gap-4">
-          <a href="/jobs" className="text-blue-600 font-medium">Browse Jobs</a>
-          <a href="/post-job" className="bg-blue-600 text-white px-5 py-2 rounded-full font-medium hover:bg-blue-700">Post a Job</a>
-        </div>
-      </nav>
-
-      {/* Header */}
       <section className="bg-blue-50 px-6 py-14 text-center">
         <h1 className="text-4xl font-bold text-gray-900">Browse Jobs</h1>
         <p className="mt-3 text-gray-500 text-lg">Every listing includes a salary range. Always.</p>
       </section>
 
-      {/* Job Listings */}
       <section className="max-w-4xl mx-auto px-6 py-12">
         {!jobs || jobs.length === 0 ? (
           <p className="text-center text-gray-400 text-lg">No jobs posted yet. Be the first!</p>
@@ -64,11 +54,7 @@ export default async function JobsPage() {
         )}
       </section>
 
-      {/* Footer */}
-      <footer className="text-center py-10 text-gray-400 text-sm border-t border-gray-100">
-        © 2025 PayClear. Built for a fairer world of work.
-      </footer>
-
+      <Footer />
     </div>
   );
 }

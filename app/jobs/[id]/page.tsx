@@ -1,8 +1,10 @@
+import Navbar from "../../components/Navbar";
+import Footer from "../../components/Footer";
 import { supabase } from "../../lib/supabase";
 
 export default async function JobDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  
+
   const { data: job, error } = await supabase
     .from("jobs")
     .select("*")
@@ -19,17 +21,8 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
 
   return (
     <div className="min-h-screen bg-white font-sans">
+      <Navbar />
 
-      {/* Navbar */}
-      <nav className="flex items-center justify-between px-8 py-5 border-b border-gray-100">
-        <a href="/" className="text-2xl font-bold text-blue-600">PayClear</a>
-        <div className="flex gap-4">
-          <a href="/jobs" className="text-gray-600 hover:text-blue-600 font-medium">Browse Jobs</a>
-          <a href="/post-job" className="bg-blue-600 text-white px-5 py-2 rounded-full font-medium hover:bg-blue-700">Post a Job</a>
-        </div>
-      </nav>
-
-      {/* Job Header */}
       <section className="bg-blue-50 px-6 py-14">
         <div className="max-w-3xl mx-auto">
           <a href="/jobs" className="text-blue-600 text-sm hover:underline">← Back to Jobs</a>
@@ -47,30 +40,21 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
         </div>
       </section>
 
-      {/* Job Details */}
       <section className="max-w-3xl mx-auto px-6 py-12">
-
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-3">About the Role</h2>
           <p className="text-gray-600 leading-relaxed">{job.description}</p>
         </div>
-
         <div className="mb-10">
           <h2 className="text-2xl font-bold text-gray-900 mb-3">Requirements</h2>
           <p className="text-gray-600 leading-relaxed">{job.requirements}</p>
         </div>
-
         <a href={`mailto:${job.contact_email}`} className="bg-blue-600 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-blue-700">
           Apply Now →
         </a>
-
       </section>
 
-      {/* Footer */}
-      <footer className="text-center py-10 text-gray-400 text-sm border-t border-gray-100">
-        © 2025 PayClear. Built for a fairer world of work.
-      </footer>
-
+      <Footer />
     </div>
   );
 }
