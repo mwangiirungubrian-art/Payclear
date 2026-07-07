@@ -15,7 +15,7 @@ export default function Navbar() {
       <div className="hidden md:flex items-center gap-8">
         <a href="/jobs" className="text-gray-500 hover:text-blue-700 font-medium text-sm">Browse Jobs</a>
         <a href="/#insights" className="text-gray-500 hover:text-blue-700 font-medium text-sm">Salary Insights</a>
-        <a href="/post-job" className="bg-blue-700 text-white px-5 py-2 rounded-full font-medium text-sm hover:bg-blue-800">Post a Job</a>
+        <a href="/checkout" className="bg-blue-700 text-white px-5 py-2 rounded-full font-medium text-sm hover:bg-blue-800">Post a Job</a>
       </div>
     </nav>
   );
