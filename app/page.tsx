@@ -21,7 +21,7 @@ export default function Home() {
           <a href="/jobs" className="bg-blue-700 text-white px-8 py-4 rounded-full text-base font-semibold hover:bg-blue-800">
             Browse Jobs
           </a>
-          <a href="/post-job" className="border border-blue-700 text-blue-700 px-8 py-4 rounded-full text-base font-semibold hover:bg-blue-50">
+          <a href="/checkout" className="border border-blue-700 text-blue-700 px-8 py-4 rounded-full text-base font-semibold hover:bg-blue-50">
             Post a Job
           </a>
         </div>
@@ -99,7 +99,7 @@ export default function Home() {
         <h2 className="text-3xl font-semibold text-white mb-4">Ready to hire transparently?</h2>
         <p className="text-blue-200 mb-8 max-w-md mx-auto">Join the movement. Post your job with a salary range and attract better candidates faster.</p>
         <div className="flex justify-center gap-4 flex-wrap">
-          <a href="/post-job" className="bg-white text-blue-700 px-8 py-4 rounded-full font-semibold hover:bg-blue-50">
+          <a href="/checkout" className="bg-white text-blue-700 px-8 py-4 rounded-full font-semibold hover:bg-blue-50">
             Post a Job →
           </a>
           <a href="/jobs" className="border border-white text-white px-8 py-4 rounded-full font-semibold hover:bg-blue-800">

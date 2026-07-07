@@ -16,10 +16,10 @@ export default function SuccessPage() {
           You will receive a confirmation email shortly.
         </p>
         <div className="flex flex-col sm:flex-row gap-4">
-          <a href="/checkout" className="bg-blue-700 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-blue-800">
+          <a href="/post-job" className="bg-blue-700 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-blue-800">
             Post Your Job Now
           </a>
-          <a href="/checkout" className="border border-gray-200 text-gray-600 px-8 py-4 rounded-full text-lg font-semibold hover:bg-gray-50">
+          <a href="/jobs" className="border border-gray-200 text-gray-600 px-8 py-4 rounded-full text-lg font-semibold hover:bg-gray-50">
             Browse Jobs
           </a>
         </div>
