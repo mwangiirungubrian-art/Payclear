@@ -13,7 +13,7 @@ export default function Footer() {
         <p className="text-sm text-gray-400">© 2026 PayClear · Built for a fairer world of work · Worldwide</p>
         <div className="flex gap-6 text-sm text-gray-400">
           <a href="/jobs" className="hover:text-blue-700">Jobs</a>
-          <a href="/post-job" className="hover:text-blue-700">Post a Job</a>
+          <a href="/checkout" className="hover:text-blue-700">Post a Job</a>
         </div>
       </div>
     </footer>
