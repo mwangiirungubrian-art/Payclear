@@ -19,6 +19,7 @@ export default function JobsPage() {
       const { data } = await supabase
         .from("jobs")
         .select("*")
+        .order("featured", { ascending: false })
         .order("created_at", { ascending: false });
       if (data) {
         setJobs(data);
@@ -38,24 +39,10 @@ export default function JobsPage() {
           job.company.toLowerCase().includes(search.toLowerCase())
       );
     }
-
-    if (industry) {
-      results = results.filter((job) => job.industry === industry);
-    }
-
-    if (level) {
-      results = results.filter((job) => job.level === level);
-    }
-
-    if (location) {
-      results = results.filter((job) =>
-        job.location.toLowerCase().includes(location.toLowerCase())
-      );
-    }
-
-    if (minSalary) {
-      results = results.filter((job) => job.salary_min >= parseInt(minSalary));
-    }
+    if (industry) results = results.filter((job) => job.industry === industry);
+    if (level) results = results.filter((job) => job.level === level);
+    if (location) results = results.filter((job) => job.location.toLowerCase().includes(location.toLowerCase()));
+    if (minSalary) results = results.filter((job) => job.salary_min >= parseInt(minSalary));
 
     setFiltered(results);
   }, [search, industry, level, location, minSalary, jobs]);
@@ -87,11 +74,7 @@ export default function JobsPage() {
             className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <select
-              value={industry}
-              onChange={(e) => setIndustry(e.target.value)}
-              className="border border-gray-200 rounded-xl px-4 py-3 text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
+            <select value={industry} onChange={(e) => setIndustry(e.target.value)} className="border border-gray-200 rounded-xl px-4 py-3 text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
               <option value="">All Industries</option>
               <option>Tech</option>
               <option>Finance</option>
@@ -101,11 +84,7 @@ export default function JobsPage() {
               <option>Retail</option>
               <option>Other</option>
             </select>
-            <select
-              value={level}
-              onChange={(e) => setLevel(e.target.value)}
-              className="border border-gray-200 rounded-xl px-4 py-3 text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
+            <select value={level} onChange={(e) => setLevel(e.target.value)} className="border border-gray-200 rounded-xl px-4 py-3 text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
               <option value="">All Levels</option>
               <option>Junior</option>
               <option>Mid</option>
@@ -129,9 +108,7 @@ export default function JobsPage() {
           <div className="flex items-center justify-between">
             <p className="text-sm text-gray-500">{filtered.length} job{filtered.length !== 1 ? "s" : ""} found</p>
             {(search || industry || level || location || minSalary) && (
-              <button onClick={clearFilters} className="text-sm text-blue-600 hover:underline">
-                Clear filters
-              </button>
+              <button onClick={clearFilters} className="text-sm text-blue-600 hover:underline">Clear filters</button>
             )}
           </div>
         </div>
@@ -141,17 +118,20 @@ export default function JobsPage() {
         {filtered.length === 0 ? (
           <div className="text-center py-20">
             <p className="text-gray-400 text-lg">No jobs match your search.</p>
-            <button onClick={clearFilters} className="mt-4 text-blue-600 hover:underline text-sm">
-              Clear filters
-            </button>
+            <button onClick={clearFilters} className="mt-4 text-blue-600 hover:underline text-sm">Clear filters</button>
           </div>
         ) : (
           <div className="flex flex-col gap-6">
             {filtered.map((job) => (
-              <div key={job.id} className="border border-gray-200 rounded-2xl p-6 hover:shadow-md transition">
+              <div key={job.id} className={`border rounded-2xl p-6 hover:shadow-md transition ${job.featured ? "border-blue-300 bg-blue-50" : "border-gray-200"}`}>
                 <div className="flex items-start justify-between">
                   <div>
-                    <h2 className="text-xl font-semibold text-gray-900">{job.title}</h2>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h2 className="text-xl font-semibold text-gray-900">{job.title}</h2>
+                      {job.featured && (
+                        <span className="bg-blue-700 text-white text-xs font-semibold px-2 py-1 rounded-full">⭐ Featured</span>
+                      )}
+                    </div>
                     <p className="text-gray-500 mt-1">{job.company} · {job.location}</p>
                     <div className="flex gap-2 mt-3">
                       <span className="bg-blue-100 text-blue-700 text-sm px-3 py-1 rounded-full">{job.level}</span>
