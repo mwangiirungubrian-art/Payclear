@@ -1,4 +1,30 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabase";
+
 export default function Navbar() {
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    getUser();
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    window.location.href = "/";
+  };
+
   return (
     <nav className="flex items-center justify-between px-8 py-4 border-b border-gray-100 bg-white">
       <div className="flex items-center gap-1">
@@ -15,7 +41,18 @@ export default function Navbar() {
       <div className="hidden md:flex items-center gap-8">
         <a href="/jobs" className="text-gray-500 hover:text-blue-700 font-medium text-sm">Browse Jobs</a>
         <a href="/#insights" className="text-gray-500 hover:text-blue-700 font-medium text-sm">Salary Insights</a>
-        <a href="/checkout" className="bg-blue-700 text-white px-5 py-2 rounded-full font-medium text-sm hover:bg-blue-800">Post a Job</a>
+        {user ? (
+          <>
+            <a href="/dashboard" className="text-gray-500 hover:text-blue-700 font-medium text-sm">My Dashboard</a>
+            <button onClick={handleLogout} className="text-gray-500 hover:text-red-600 font-medium text-sm">Log Out</button>
+            <a href="/checkout" className="bg-blue-700 text-white px-5 py-2 rounded-full font-medium text-sm hover:bg-blue-800">Post a Job</a>
+          </>
+        ) : (
+          <>
+            <a href="/login" className="text-gray-500 hover:text-blue-700 font-medium text-sm">Employer Login</a>
+            <a href="/checkout" className="bg-blue-700 text-white px-5 py-2 rounded-full font-medium text-sm hover:bg-blue-800">Post a Job</a>
+          </>
+        )}
       </div>
     </nav>
   );

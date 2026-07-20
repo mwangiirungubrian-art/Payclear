@@ -41,6 +41,13 @@ export default function CheckoutPage() {
       <section className="bg-blue-50 px-6 py-14 text-center">
         <h1 className="text-4xl font-bold text-gray-900">Post a Job</h1>
         <p className="mt-3 text-gray-500 text-lg">One payment. 30 days of visibility. Salary shown always.</p>
+        <p className="mt-4 text-sm text-gray-400">
+          Already have an account?{" "}
+          <a href="/login" className="text-blue-700 font-medium hover:underline">Log in</a>
+          {" "}to manage your listings after posting.
+          {" "}New here?{" "}
+          <a href="/login" className="text-blue-700 font-medium hover:underline">Create a free account</a>.
+        </p>
       </section>
 
       <section className="max-w-xl mx-auto px-6 py-16">

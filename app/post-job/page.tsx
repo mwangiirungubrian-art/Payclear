@@ -63,9 +63,14 @@ export default function PostJobPage() {
           <div className="text-5xl mb-6">🎉</div>
           <h1 className="text-3xl font-bold text-gray-900">Job Posted Successfully!</h1>
           <p className="text-gray-500 mt-3 text-lg">Your listing is live on PayClear.</p>
-          <a href="/jobs" className="mt-8 bg-blue-600 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-blue-700">
-            Browse Jobs
-          </a>
+          <div className="flex gap-4 mt-8">
+            <a href="/dashboard" className="bg-blue-600 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-blue-700">
+              View My Dashboard
+            </a>
+            <a href="/jobs" className="border border-gray-200 text-gray-600 px-8 py-4 rounded-full text-lg font-semibold hover:bg-gray-50">
+              Browse Jobs
+            </a>
+          </div>
         </div>
         <Footer />
       </div>
