@@ -40,7 +40,7 @@ export default function Navbar() {
       </div>
       <div className="hidden md:flex items-center gap-8">
         <a href="/jobs" className="text-gray-500 hover:text-blue-700 font-medium text-sm">Browse Jobs</a>
-        <a href="/#insights" className="text-gray-500 hover:text-blue-700 font-medium text-sm">Salary Insights</a>
+        <a href="/insights" className="text-gray-500 hover:text-blue-700 font-medium text-sm">Salary Insights</a>
         {user ? (
           <>
             <a href="/dashboard" className="text-gray-500 hover:text-blue-700 font-medium text-sm">My Dashboard</a>
