@@ -196,9 +196,9 @@ export default function CheckoutPage() {
         <div className="bg-gray-50 rounded-2xl p-8 text-center border border-gray-100">
           <h3 className="text-xl font-bold text-gray-900 mb-2">Need a custom plan?</h3>
           <p className="text-gray-500 text-sm mb-4">Large team or unique requirements? Let's talk and build something that works for you.</p>
-          <a href="mailto:hello@payclear.com" className="bg-blue-700 text-white px-8 py-3 rounded-full font-semibold hover:bg-blue-800 text-sm">
-            Contact Us →
-          </a>
+          <a href="/contact" className="bg-blue-700 text-white px-8 py-3 rounded-full font-semibold hover:bg-blue-800 text-sm">
+  Contact Us →
+</a>
         </div>
 
       </section>
