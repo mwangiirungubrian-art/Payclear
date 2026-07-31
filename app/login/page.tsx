@@ -24,7 +24,7 @@ export default function LoginPage() {
       if (error) {
         setError(error.message);
       } else {
-        setMessage("Account created! Check your email to confirm then log in.");
+        setMessage("Account created! Log in to continue.");
       }
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -48,19 +48,15 @@ export default function LoginPage() {
             {isSignUp ? "Create Employer Account" : "Employer Login"}
           </h1>
           <p className="text-gray-500 text-center mb-8">
-            {isSignUp ? "Start posting jobs with salary transparency" : "Manage your job listings"}
+            {isSignUp ? "Start posting jobs with salary transparency on Luravo" : "Manage your Luravo job listings"}
           </p>
 
           {error && (
-            <div className="bg-red-50 text-red-600 px-4 py-3 rounded-xl text-sm mb-4">
-              {error}
-            </div>
+            <div className="bg-red-50 text-red-600 px-4 py-3 rounded-xl text-sm mb-4">{error}</div>
           )}
 
           {message && (
-            <div className="bg-green-50 text-green-600 px-4 py-3 rounded-xl text-sm mb-4">
-              {message}
-            </div>
+            <div className="bg-green-50 text-green-600 px-4 py-3 rounded-xl text-sm mb-4">{message}</div>
           )}
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -89,7 +85,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="bg-blue-700 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-blue-800 transition disabled:opacity-50"
+              className="bg-blue-600 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50"
             >
               {loading ? "Please wait..." : isSignUp ? "Create Account" : "Log In"}
             </button>
@@ -99,7 +95,7 @@ export default function LoginPage() {
             {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
             <button
               onClick={() => setIsSignUp(!isSignUp)}
-              className="text-blue-700 font-medium hover:underline"
+              className="text-blue-600 font-medium hover:underline"
             >
               {isSignUp ? "Log in" : "Sign up"}
             </button>

@@ -10,13 +10,13 @@ export default function SuccessPage() {
         <div className="text-6xl mb-6">🎉</div>
         <h1 className="text-4xl font-bold text-gray-900 mb-4">Payment Successful!</h1>
         <p className="text-gray-500 text-lg max-w-md mb-4">
-          Your job listing payment has been received. You can now post your job on PayClear.
+          Your job listing payment has been received. You can now post your job on Luravo.
         </p>
         <p className="text-gray-400 text-sm mb-10">
           You will receive a confirmation email shortly.
         </p>
         <div className="flex flex-col sm:flex-row gap-4">
-          <a href="/post-job" className="bg-blue-700 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-blue-800">
+          <a href="/post-job" className="bg-blue-600 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-blue-700">
             Post Your Job Now
           </a>
           <a href="/jobs" className="border border-gray-200 text-gray-600 px-8 py-4 rounded-full text-lg font-semibold hover:bg-gray-50">

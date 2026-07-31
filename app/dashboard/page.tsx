@@ -60,7 +60,7 @@ export default function DashboardPage() {
       <section className="max-w-4xl mx-auto px-6 py-12">
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-2xl font-bold text-gray-900">Your Job Listings</h2>
-          <a href="/checkout" className="bg-blue-700 text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-blue-800">
+          <a href="/checkout" className="bg-blue-600 text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-blue-700">
             + Post New Job
           </a>
         </div>
@@ -68,7 +68,7 @@ export default function DashboardPage() {
         {jobs.length === 0 ? (
           <div className="text-center py-20 border border-gray-100 rounded-2xl">
             <p className="text-gray-400 text-lg mb-4">No jobs posted yet</p>
-            <a href="/checkout" className="bg-blue-700 text-white px-8 py-4 rounded-full font-semibold hover:bg-blue-800">
+            <a href="/checkout" className="bg-blue-600 text-white px-8 py-4 rounded-full font-semibold hover:bg-blue-700">
               Post Your First Job →
             </a>
           </div>
@@ -78,7 +78,12 @@ export default function DashboardPage() {
               <div key={job.id} className="border border-gray-200 rounded-2xl p-6">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="text-xl font-semibold text-gray-900">{job.title}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-xl font-semibold text-gray-900">{job.title}</h3>
+                      {job.featured && (
+                        <span className="bg-blue-600 text-white text-xs font-semibold px-2 py-1 rounded-full">⭐ Featured</span>
+                      )}
+                    </div>
                     <p className="text-gray-500 mt-1">{job.company} · {job.location}</p>
                     <div className="flex gap-2 mt-3">
                       <span className="bg-blue-100 text-blue-700 text-sm px-3 py-1 rounded-full">{job.level}</span>
@@ -89,7 +94,7 @@ export default function DashboardPage() {
                     </p>
                   </div>
                   <div className="flex flex-col gap-2">
-                    <a href={`/jobs/${job.id}`} className="text-blue-700 text-sm font-medium hover:underline text-right">
+                    <a href={`/jobs/${job.id}`} className="text-blue-600 text-sm font-medium hover:underline text-right">
                       View listing
                     </a>
                     <button

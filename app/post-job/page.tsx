@@ -62,7 +62,7 @@ export default function PostJobPage() {
         <div className="flex flex-col items-center justify-center flex-1 py-20">
           <div className="text-5xl mb-6">🎉</div>
           <h1 className="text-3xl font-bold text-gray-900">Job Posted Successfully!</h1>
-          <p className="text-gray-500 mt-3 text-lg">Your listing is live on PayClear.</p>
+          <p className="text-gray-500 mt-3 text-lg">Your listing is live on Luravo.</p>
           <div className="flex gap-4 mt-8">
             <a href="/dashboard" className="bg-blue-600 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-blue-700">
               View My Dashboard
@@ -123,7 +123,7 @@ export default function PostJobPage() {
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Job Type *</label>
-              <select required name="type" value={form.type} onChange={handleChange} className="w-full border border-gray-200 rounded-xl px=4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <select required name="type" value={form.type} onChange={handleChange} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <option value="">Select type</option>
                 <option>Full Time</option>
                 <option>Part Time</option>
@@ -153,7 +153,7 @@ export default function PostJobPage() {
               <input required name="salary_min" value={form.salary_min} onChange={handleChange} type="number" placeholder="Minimum e.g. 150000" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500" />
               <input required name="salary_max" value={form.salary_max} onChange={handleChange} type="number" placeholder="Maximum e.g. 250000" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500" />
             </div>
-            <p className="text-blue-600 text-sm mt-2 font-medium">💡 Salary range is mandatory on PayClear. This is what makes us different.</p>
+            <p className="text-blue-600 text-sm mt-2 font-medium">💡 Salary range is mandatory on Luravo. This is what makes us different.</p>
           </div>
 
           <div>
