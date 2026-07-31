@@ -51,21 +51,21 @@ export default async function InsightsPage() {
       <Navbar />
 
       <section className="bg-blue-50 px-6 py-14 text-center">
-        <p className="text-xs font-semibold text-blue-700 tracking-widest uppercase mb-3">Data from real job listings</p>
+        <p className="text-xs font-semibold text-blue-600 tracking-widest uppercase mb-3">Data from real job listings</p>
         <h1 className="text-4xl font-bold text-gray-900">Salary Insights</h1>
         <p className="mt-3 text-gray-500 text-lg max-w-xl mx-auto">
-          Real salary data from every job posted on PayClear. No estimates. No guesses.
+          Real salary data from every job posted on Luravo. No estimates. No guesses.
         </p>
       </section>
 
       <section className="border-b border-gray-100 py-10 px-6">
         <div className="max-w-4xl mx-auto grid grid-cols-3 divide-x divide-gray-100 text-center">
           <div className="px-6">
-            <p className="text-3xl font-semibold text-blue-700">KES {avgSalary.toLocaleString()}</p>
+            <p className="text-3xl font-semibold text-blue-600">KES {avgSalary.toLocaleString()}</p>
             <p className="text-sm text-gray-500 mt-1">Average monthly salary</p>
           </div>
           <div className="px-6">
-            <p className="text-3xl font-semibold text-blue-700">{jobs.length}</p>
+            <p className="text-3xl font-semibold text-blue-600">{jobs.length}</p>
             <p className="text-sm text-gray-500 mt-1">Total jobs analysed</p>
           </div>
           <div className="px-6">
@@ -79,7 +79,7 @@ export default async function InsightsPage() {
 
         <div className="mb-14">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Average Salary by Industry</h2>
-          <p className="text-gray-500 text-sm mb-6">Based on all jobs posted on PayClear</p>
+          <p className="text-gray-500 text-sm mb-6">Based on all jobs posted on Luravo</p>
           <div className="flex flex-col gap-4">
             {byIndustry.map(({ industry, avg, count }) => (
               <div key={industry}>
@@ -88,7 +88,7 @@ export default async function InsightsPage() {
                   <span className="text-sm text-gray-500">{count} job{count !== 1 ? "s" : ""} · KES {avg.toLocaleString()}/mo</span>
                 </div>
                 <div className="w-full bg-gray-100 rounded-full h-3">
-                  <div className="bg-blue-600 h-3 rounded-full" style={{ width: `${Math.round((avg / maxAvg) * 100)}%` }} />
+                  <div className="bg-blue-500 h-3 rounded-full" style={{ width: `${Math.round((avg / maxAvg) * 100)}%` }} />
                 </div>
               </div>
             ))}
@@ -101,7 +101,7 @@ export default async function InsightsPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {byLevel.map(({ level, avg, count }) => (
               <div key={level} className="border border-gray-200 rounded-2xl p-6 text-center">
-                <p className="text-sm font-semibold text-blue-700 mb-2">{level}</p>
+                <p className="text-sm font-semibold text-blue-600 mb-2">{level}</p>
                 <p className="text-3xl font-bold text-gray-900">KES {avg.toLocaleString()}</p>
                 <p className="text-gray-400 text-sm mt-1">per month</p>
                 <p className="text-gray-400 text-xs mt-2">{count} job{count !== 1 ? "s" : ""} analysed</p>
@@ -112,12 +112,12 @@ export default async function InsightsPage() {
 
         <div className="mb-14">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Top Paying Jobs Right Now</h2>
-          <p className="text-gray-500 text-sm mb-6">Highest paying open positions on PayClear</p>
+          <p className="text-gray-500 text-sm mb-6">Highest paying open positions on Luravo</p>
           <div className="flex flex-col gap-4">
             {topJobs.map((job, index) => (
               <div key={job.id} className="flex items-center justify-between border border-gray-200 rounded-2xl p-5 hover:shadow-md transition">
                 <div className="flex items-center gap-4">
-                  <span className="text-2xl font-bold text-blue-200 w-8">#{index + 1}</span>
+                  <span className="text-2xl font-bold text-blue-100 w-8">#{index + 1}</span>
                   <div>
                     <p className="font-semibold text-gray-900">{job.title}</p>
                     <p className="text-gray-500 text-sm">{job.company} · {job.location}</p>
@@ -126,17 +126,17 @@ export default async function InsightsPage() {
                 <div className="text-right">
                   <p className="text-green-600 font-bold">KES {job.salary_max.toLocaleString()}</p>
                   <p className="text-gray-400 text-xs">up to / month</p>
-                  <a href={`/jobs/${job.id}`} className="text-blue-600 text-xs hover:underline">View job</a>
+                  <a href={`/jobs/${job.id}`} className="text-blue-500 text-xs hover:underline">View job</a>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="bg-blue-700 rounded-2xl p-10 text-center">
+        <div className="bg-blue-600 rounded-2xl p-10 text-center">
           <h2 className="text-2xl font-bold text-white mb-2">Want deeper salary data?</h2>
           <p className="text-blue-200 mb-6">Post a job with a salary range and contribute to the most accurate compensation database.</p>
-          <a href="/checkout" className="bg-white text-blue-700 px-8 py-4 rounded-full font-semibold hover:bg-blue-50">
+          <a href="/checkout" className="bg-white text-blue-600 px-8 py-4 rounded-full font-semibold hover:bg-blue-50">
             Post a Job →
           </a>
         </div>
