@@ -167,7 +167,7 @@ export default function CheckoutPage() {
               <li>✅ Full salary insights access</li>
               <li>✅ Dedicated account manager</li>
               <li>✅ Custom company branding</li>
-              <li>✅ API access to salary data</li>
+              <li>✅ Monthly salary benchmarking report</li>
             </ul>
             <button
               className="intaSendPayButton w-full bg-blue-600 text-white py-4 rounded-full text-lg font-semibold hover:bg-blue-700 transition"
