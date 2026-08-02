@@ -72,8 +72,8 @@ export default function ContactPage() {
           </div>
           <div className="text-center p-6 bg-blue-50 rounded-2xl">
             <p className="text-2xl mb-2">🌍</p>
-            <p className="font-semibold text-gray-900 text-sm">Pan-Africa Ready</p>
-            <p className="text-gray-500 text-xs mt-1">Kenya, Uganda, Nigeria and beyond</p>
+            <p className="font-semibold text-gray-900 text-sm">Worldwide Ready</p>
+            <p className="text-gray-500 text-xs mt-1">Kenya, UK, USA, UAE and beyond</p>
           </div>
         </div>
 
