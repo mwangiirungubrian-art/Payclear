@@ -3,10 +3,12 @@
 import { useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { supabase } from "../lib/supabase";
 
 export default function ContactPage() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [form, setForm] = useState({
     name: "",
     company: "",
@@ -22,9 +24,23 @@ export default function ContactPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    setError("");
+
+    const { error } = await supabase.from("contacts").insert([{
+      name: form.name,
+      company: form.company,
+      email: form.email,
+      team_size: form.team_size,
+      message: form.message,
+    }]);
+
     setLoading(false);
-    setSubmitted(true);
+
+    if (error) {
+      setError("Something went wrong. Please try again.");
+    } else {
+      setSubmitted(true);
+    }
   };
 
   if (submitted) {
@@ -78,6 +94,10 @@ export default function ContactPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+
+          {error && (
+            <div className="bg-red-50 text-red-600 px-4 py-3 rounded-xl text-sm">{error}</div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>
