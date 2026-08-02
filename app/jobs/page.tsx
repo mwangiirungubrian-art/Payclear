@@ -31,7 +31,6 @@ export default function JobsPage() {
 
   useEffect(() => {
     let results = jobs;
-
     if (search) {
       results = results.filter(
         (job) =>
@@ -43,7 +42,6 @@ export default function JobsPage() {
     if (level) results = results.filter((job) => job.level === level);
     if (location) results = results.filter((job) => job.location.toLowerCase().includes(location.toLowerCase()));
     if (minSalary) results = results.filter((job) => job.salary_min >= parseInt(minSalary));
-
     setFiltered(results);
   }, [search, industry, level, location, minSalary, jobs]);
 
@@ -129,7 +127,7 @@ export default function JobsPage() {
                     <div className="flex items-center gap-2 mb-1">
                       <h2 className="text-xl font-semibold text-gray-900">{job.title}</h2>
                       {job.featured && (
-                        <span className="bg-blue-700 text-white text-xs font-semibold px-2 py-1 rounded-full">⭐ Featured</span>
+                        <span className="bg-blue-600 text-white text-xs font-semibold px-2 py-1 rounded-full">⭐ Featured</span>
                       )}
                     </div>
                     <p className="text-gray-500 mt-1">{job.company} · {job.location}</p>

@@ -37,7 +37,7 @@ export default function ContactPage() {
           <p className="text-gray-500 text-lg max-w-md mb-8">
             Thanks for reaching out. Our team will get back to you within 24 hours to discuss your custom plan.
           </p>
-          <a href="/" className="bg-blue-700 text-white px-8 py-4 rounded-full font-semibold hover:bg-blue-800">
+          <a href="/" className="bg-blue-600 text-white px-8 py-4 rounded-full font-semibold hover:bg-blue-700">
             Back to Home
           </a>
         </div>
@@ -112,7 +112,7 @@ export default function ContactPage() {
             <textarea required name="message" value={form.message} onChange={handleChange} rows={5} placeholder="How many jobs do you post per month? What features are most important to you? Any specific requirements?" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
 
-          <button type="submit" disabled={loading} className="bg-blue-700 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-blue-800 transition disabled:opacity-50">
+          <button type="submit" disabled={loading} className="bg-blue-600 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50">
             {loading ? "Sending..." : "Send Message →"}
           </button>
 

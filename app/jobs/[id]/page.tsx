@@ -26,7 +26,12 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
       <section className="bg-blue-50 px-6 py-14">
         <div className="max-w-3xl mx-auto">
           <a href="/jobs" className="text-blue-600 text-sm hover:underline">← Back to Jobs</a>
-          <h1 className="text-4xl font-bold text-gray-900 mt-4">{job.title}</h1>
+          <div className="flex items-center gap-3 mt-4">
+            <h1 className="text-4xl font-bold text-gray-900">{job.title}</h1>
+            {job.featured && (
+              <span className="bg-blue-600 text-white text-xs font-semibold px-3 py-1 rounded-full">⭐ Featured</span>
+            )}
+          </div>
           <p className="text-gray-500 mt-2 text-lg">{job.company} · {job.location}</p>
           <div className="flex gap-2 mt-4">
             <span className="bg-blue-100 text-blue-700 text-sm px-3 py-1 rounded-full">{job.level}</span>
