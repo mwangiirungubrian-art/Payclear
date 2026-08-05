@@ -54,9 +54,13 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
           <h2 className="text-2xl font-bold text-gray-900 mb-3">Requirements</h2>
           <p className="text-gray-600 leading-relaxed">{job.requirements}</p>
         </div>
-        <a href={`mailto:${job.contact_email}`} className="bg-blue-600 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-blue-700">
-          Apply Now →
-        </a>
+        <a href={job.apply_url ? job.apply_url : `mailto:${job.contact_email}`}
+  target={job.apply_url ? "_blank" : undefined}
+  rel={job.apply_url ? "noopener noreferrer" : undefined}
+  className="bg-blue-600 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-blue-700"
+>
+  {job.apply_url ? "Apply on Company Site →" : "Apply Now →"}
+</a>
       </section>
 
       <Footer />

@@ -9,6 +9,7 @@ export default function PostJobPage() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [applyMethod, setApplyMethod] = useState("email");
 
   const [form, setForm] = useState({
     title: "",
@@ -22,6 +23,7 @@ export default function PostJobPage() {
     description: "",
     requirements: "",
     contact_email: "",
+    apply_url: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -45,6 +47,7 @@ export default function PostJobPage() {
       description: form.description,
       requirements: form.requirements,
       contact_email: form.contact_email,
+      apply_url: applyMethod === "ats" ? form.apply_url : null,
     }]);
 
     setLoading(false);
@@ -166,10 +169,49 @@ export default function PostJobPage() {
             <textarea required name="requirements" value={form.requirements} onChange={handleChange} rows={4} placeholder="List the key requirements for this role..." className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
 
+          {/* Application Method */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Contact Email *</label>
-            <input required name="contact_email" value={form.contact_email} onChange={handleChange} type="email" placeholder="hiring@yourcompany.com" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <label className="block text-sm font-semibold text-gray-700 mb-3">How should candidates apply? *</label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setApplyMethod("email")}
+                className={`border rounded-xl px-4 py-4 text-left transition ${applyMethod === "email" ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-blue-300"}`}
+              >
+                <p className="font-medium text-gray-800 text-sm">📧 By Email</p>
+                <p className="text-gray-400 text-xs mt-1">Candidates email you directly</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setApplyMethod("ats")}
+                className={`border rounded-xl px-4 py-4 text-left transition ${applyMethod === "ats" ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-blue-300"}`}
+              >
+                <p className="font-medium text-gray-800 text-sm">🔗 External ATS</p>
+                <p className="text-gray-400 text-xs mt-1">Jazz HR, Workable, Greenhouse etc</p>
+              </button>
+            </div>
           </div>
+
+          {applyMethod === "email" && (
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Contact Email *</label>
+              <input required name="contact_email" value={form.contact_email} onChange={handleChange} type="email" placeholder="hiring@yourcompany.com" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+          )}
+
+          {applyMethod === "ats" && (
+            <div className="flex flex-col gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Application URL *</label>
+                <input required name="apply_url" value={form.apply_url} onChange={handleChange} type="url" placeholder="https://jobs.jazzhr.com/your-job-link" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <p className="text-gray-400 text-xs mt-2">Candidates will be redirected here when they click Apply</p>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Contact Email * (for receipts)</label>
+                <input required name="contact_email" value={form.contact_email} onChange={handleChange} type="email" placeholder="hiring@yourcompany.com" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+            </div>
+          )}
 
           <button type="submit" disabled={loading} className="bg-blue-600 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50">
             {loading ? "Posting..." : "Post Job →"}
