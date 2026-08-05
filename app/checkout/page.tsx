@@ -59,7 +59,7 @@ export default function CheckoutPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
 
           {/* Standard */}
-          <div className="border border-gray-200 rounded-2xl p-8 text-center shadow-sm">
+          <div id="standard" className="border border-gray-200 rounded-2xl p-8 text-center shadow-sm scroll-mt-8">
             <h3 className="text-xl font-bold text-gray-900 mb-2">Standard Listing</h3>
             <p className="text-gray-500 text-sm mb-6">Your job posted for 30 days</p>
             <p className="text-5xl font-bold text-blue-600 mb-1">KES 1,500</p>
@@ -83,7 +83,7 @@ export default function CheckoutPage() {
           </div>
 
           {/* Featured */}
-          <div className="border border-blue-300 rounded-2xl p-8 text-center shadow-sm bg-blue-50">
+          <div id="featured" className="border border-blue-300 rounded-2xl p-8 text-center shadow-sm bg-blue-50 scroll-mt-8">
             <div className="inline-block bg-blue-600 text-white text-xs font-semibold px-3 py-1 rounded-full mb-4">⭐ FEATURED</div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">Featured Listing</h3>
             <p className="text-gray-500 text-sm mb-6">Top placement for maximum visibility</p>
@@ -116,7 +116,7 @@ export default function CheckoutPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
 
           {/* Growth */}
-          <div className="border border-gray-200 rounded-2xl p-8 text-center shadow-sm">
+          <div id="growth" className="border border-gray-200 rounded-2xl p-8 text-center shadow-sm scroll-mt-8">
             <h3 className="text-xl font-bold text-gray-900 mb-2">Growth</h3>
             <p className="text-gray-500 text-sm mb-6">For growing teams</p>
             <p className="text-4xl font-bold text-blue-600 mb-1">KES 9,999</p>
@@ -140,7 +140,7 @@ export default function CheckoutPage() {
           </div>
 
           {/* Pro */}
-          <div id="pro" className="border border-blue-300 rounded-2xl p-8 text-center shadow-sm bg-blue-50 relative">
+          <div id="pro" className="border border-blue-300 rounded-2xl p-8 text-center shadow-sm bg-blue-50 relative scroll-mt-8">
             <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-green-600 text-white text-xs font-semibold px-4 py-1 rounded-full">MOST POPULAR</div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">Pro</h3>
             <p className="text-gray-500 text-sm mb-6">For active recruiters</p>
@@ -166,10 +166,11 @@ export default function CheckoutPage() {
           </div>
 
           {/* Enterprise */}
-          <div id="enterprise" className="border border-gray-200 rounded-2xl p-8 text-center shadow-sm">
+          <div id="enterprise" className="border border-purple-200 rounded-2xl p-8 text-center shadow-sm bg-purple-50 scroll-mt-8">
+            <div className="inline-block bg-purple-600 text-white text-xs font-semibold px-3 py-1 rounded-full mb-4">🏢 ENTERPRISE</div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">Enterprise</h3>
             <p className="text-gray-500 text-sm mb-6">For large organisations</p>
-            <p className="text-4xl font-bold text-blue-600 mb-1">KES 79,999</p>
+            <p className="text-4xl font-bold text-purple-600 mb-1">KES 79,999</p>
             <p className="text-gray-400 text-sm mb-8">per year</p>
             <ul className="text-left text-gray-600 text-sm space-y-3 mb-8">
               <li>✅ Unlimited job posts</li>
@@ -180,7 +181,7 @@ export default function CheckoutPage() {
               <li>✅ Monthly salary benchmarking report (PDF)</li>
             </ul>
             <button
-              className="intaSendPayButton w-full bg-blue-600 text-white py-4 rounded-full text-lg font-semibold hover:bg-blue-700 transition"
+              className="intaSendPayButton w-full bg-purple-600 text-white py-4 rounded-full text-lg font-semibold hover:bg-purple-700 transition"
               data-amount="79999"
               data-currency="KES"
               data-email="employer@luravo.com"
