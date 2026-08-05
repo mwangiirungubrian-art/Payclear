@@ -10,6 +10,7 @@ export default function PostJobPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [applyMethod, setApplyMethod] = useState("email");
+  const [salaryType, setSalaryType] = useState("range");
 
   const [form, setForm] = useState({
     title: "",
@@ -20,6 +21,7 @@ export default function PostJobPage() {
     industry: "",
     salary_min: "",
     salary_max: "",
+    salary_fixed: "",
     description: "",
     requirements: "",
     contact_email: "",
@@ -42,8 +44,10 @@ export default function PostJobPage() {
       level: form.level,
       type: form.type,
       industry: form.industry,
-      salary_min: parseInt(form.salary_min),
-      salary_max: parseInt(form.salary_max),
+      salary_type: salaryType,
+      salary_min: salaryType === "range" ? parseInt(form.salary_min) : parseInt(form.salary_fixed),
+      salary_max: salaryType === "range" ? parseInt(form.salary_max) : parseInt(form.salary_fixed),
+      salary_fixed: salaryType === "fixed" ? parseInt(form.salary_fixed) : null,
       description: form.description,
       requirements: form.requirements,
       contact_email: form.contact_email,
@@ -89,7 +93,7 @@ export default function PostJobPage() {
           ✅ Payment confirmed — fill in your job details below
         </div>
         <h1 className="text-4xl font-bold text-gray-900">Post Your Job</h1>
-        <p className="mt-3 text-gray-500 text-lg">Salary range is required. No exceptions.</p>
+        <p className="mt-3 text-gray-500 text-lg">Salary is required. No exceptions.</p>
       </section>
 
       <section className="max-w-2xl mx-auto px-6 py-12">
@@ -150,14 +154,49 @@ export default function PostJobPage() {
             </select>
           </div>
 
+          {/* Salary Type Toggle */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Salary Range (KES per month) *</label>
-            <div className="grid grid-cols-2 gap-4">
-              <input required name="salary_min" value={form.salary_min} onChange={handleChange} type="number" placeholder="Minimum e.g. 150000" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              <input required name="salary_max" value={form.salary_max} onChange={handleChange} type="number" placeholder="Maximum e.g. 250000" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <label className="block text-sm font-semibold text-gray-700 mb-3">Salary Type *</label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setSalaryType("range")}
+                className={`border rounded-xl px-4 py-4 text-left transition ${salaryType === "range" ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-blue-300"}`}
+              >
+                <p className="font-medium text-gray-800 text-sm">📊 Salary Range</p>
+                <p className="text-gray-400 text-xs mt-1">e.g. KES 100,000 – 150,000</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSalaryType("fixed")}
+                className={`border rounded-xl px-4 py-4 text-left transition ${salaryType === "fixed" ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-blue-300"}`}
+              >
+                <p className="font-medium text-gray-800 text-sm">💰 Fixed Salary</p>
+                <p className="text-gray-400 text-xs mt-1">e.g. KES 120,000 exactly</p>
+              </button>
             </div>
-            <p className="text-blue-600 text-sm mt-2 font-medium">💡 Salary range is mandatory on Luravo. This is what makes us different.</p>
           </div>
+
+          {/* Salary Range fields */}
+          {salaryType === "range" && (
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Salary Range (KES per month) *</label>
+              <div className="grid grid-cols-2 gap-4">
+                <input required name="salary_min" value={form.salary_min} onChange={handleChange} type="number" placeholder="Minimum e.g. 100000" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <input required name="salary_max" value={form.salary_max} onChange={handleChange} type="number" placeholder="Maximum e.g. 150000" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <p className="text-blue-600 text-sm mt-2 font-medium">💡 Salary range is mandatory on Luravo. This is what makes us different.</p>
+            </div>
+          )}
+
+          {/* Fixed Salary field */}
+          {salaryType === "fixed" && (
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Fixed Salary (KES per month) *</label>
+              <input required name="salary_fixed" value={form.salary_fixed} onChange={handleChange} type="number" placeholder="e.g. 120000" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <p className="text-blue-600 text-sm mt-2 font-medium">💡 Showing a fixed salary builds trust with candidates.</p>
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Job Description *</label>
