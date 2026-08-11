@@ -139,9 +139,13 @@ export default function JobsPage() {
                   </div>
                   <div className="text-right">
                     <p className="text-green-600 font-bold text-lg">
-                      KES {job.salary_min.toLocaleString()} – {job.salary_max.toLocaleString()}
-                    </p>
-                    <p className="text-gray-400 text-sm mt-1">per month</p>
+  {job.salary_type === "fixed"
+    ? `KES ${job.salary_min.toLocaleString()}`
+    : `KES ${job.salary_min.toLocaleString()} – ${job.salary_max.toLocaleString()}`}
+</p>
+<p className="text-gray-400 text-sm mt-1">
+  {job.salary_type === "fixed" ? "fixed per month" : "per month"}
+</p>
                     <a href={`/jobs/${job.id}`} className="mt-3 inline-block bg-blue-600 text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-blue-700">
                       View Job
                     </a>

@@ -39,9 +39,13 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
             <span className="bg-gray-100 text-gray-600 text-sm px-3 py-1 rounded-full">{job.industry}</span>
           </div>
           <p className="text-green-600 font-bold text-2xl mt-6">
-            KES {job.salary_min.toLocaleString()} – {job.salary_max.toLocaleString()}
-            <span className="text-gray-400 text-base font-normal ml-2">per month</span>
-          </p>
+  {job.salary_type === "fixed"
+    ? `KES ${job.salary_min.toLocaleString()}`
+    : `KES ${job.salary_min.toLocaleString()} – ${job.salary_max.toLocaleString()}`}
+  <span className="text-gray-400 text-base font-normal ml-2">
+    {job.salary_type === "fixed" ? "fixed per month" : "per month"}
+  </span>
+</p>
         </div>
       </section>
 
