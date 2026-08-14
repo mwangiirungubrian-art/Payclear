@@ -8,6 +8,7 @@ import Footer from "../components/Footer";
 export default function DashboardPage() {
   const [user, setUser] = useState<any>(null);
   const [jobs, setJobs] = useState<any[]>([]);
+  const [subscription, setSubscription] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,13 +20,23 @@ export default function DashboardPage() {
       }
       setUser(user);
 
-      const { data } = await supabase
+      const { data: jobs } = await supabase
         .from("jobs")
         .select("*")
         .eq("contact_email", user.email)
         .order("created_at", { ascending: false });
 
-      if (data) setJobs(data);
+      if (jobs) setJobs(jobs);
+
+      const { data: subs } = await supabase
+        .from("subscriptions")
+        .select("*")
+        .eq("email", user.email)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (subs && subs.length > 0) setSubscription(subs[0]);
+
       setLoading(false);
     };
 
@@ -36,6 +47,15 @@ export default function DashboardPage() {
     if (!confirm("Are you sure you want to delete this job?")) return;
     await supabase.from("jobs").delete().eq("id", id);
     setJobs(jobs.filter((job) => job.id !== id));
+  };
+
+  const getPlanLabel = (plan: string) => {
+    if (plan === "standard-listing") return "Standard Listing";
+    if (plan === "featured-listing") return "Featured Listing";
+    if (plan === "growth-plan") return "Growth Plan";
+    if (plan === "pro-plan") return "Pro Plan";
+    if (plan === "enterprise-plan") return "Enterprise Plan";
+    return plan;
   };
 
   if (loading) {
@@ -58,11 +78,54 @@ export default function DashboardPage() {
       </section>
 
       <section className="max-w-4xl mx-auto px-6 py-12">
+
+        {/* Subscription Status */}
+        {subscription ? (
+          <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 mb-10">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div>
+                <p className="text-sm text-blue-600 font-semibold mb-1">Active Plan</p>
+                <p className="text-2xl font-bold text-gray-900">{getPlanLabel(subscription.plan)}</p>
+                <p className="text-gray-500 text-sm mt-1">
+                  Expires: {new Date(subscription.expires_at).toLocaleDateString("en-KE", { year: "numeric", month: "long", day: "numeric" })}
+                </p>
+              </div>
+              <div className="flex gap-6 text-center">
+                <div>
+                  <p className="text-3xl font-bold text-blue-600">{subscription.posts_remaining}</p>
+                  <p className="text-gray-500 text-xs mt-1">Posts remaining</p>
+                </div>
+                <div>
+                  <p className="text-3xl font-bold text-green-600">{subscription.featured_remaining}</p>
+                  <p className="text-gray-500 text-xs mt-1">Featured remaining</p>
+                </div>
+              </div>
+              <a href="/post-job" className="bg-blue-600 text-white px-6 py-3 rounded-full text-sm font-semibold hover:bg-blue-700">
+                Post a Job →
+              </a>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-gray-50 border border-gray-100 rounded-2xl p-6 mb-10 text-center">
+            <p className="text-gray-500 mb-4">You don't have an active plan yet.</p>
+            <a href="/checkout" className="bg-blue-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-blue-700 text-sm">
+              View Plans →
+            </a>
+          </div>
+        )}
+
+        {/* Job Listings */}
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-2xl font-bold text-gray-900">Your Job Listings</h2>
-          <a href="/checkout" className="bg-blue-600 text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-blue-700">
-            + Post New Job
-          </a>
+          {subscription && subscription.posts_remaining > 0 ? (
+            <a href="/post-job" className="bg-blue-600 text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-blue-700">
+              + Post New Job
+            </a>
+          ) : (
+            <a href="/checkout" className="bg-blue-600 text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-blue-700">
+              + Buy Posts
+            </a>
+          )}
         </div>
 
         {jobs.length === 0 ? (
@@ -90,7 +153,10 @@ export default function DashboardPage() {
                       <span className="bg-gray-100 text-gray-600 text-sm px-3 py-1 rounded-full">{job.type}</span>
                     </div>
                     <p className="text-green-600 font-bold mt-3">
-                      KES {job.salary_min.toLocaleString()} – {job.salary_max.toLocaleString()}
+                      {job.salary_type === "fixed"
+                        ? `KES ${job.salary_min.toLocaleString()} fixed`
+                        : `KES ${job.salary_min.toLocaleString()} – ${job.salary_max.toLocaleString()}`}
+                      <span className="text-gray-400 text-sm font-normal ml-1">/ month</span>
                     </p>
                   </div>
                   <div className="flex flex-col gap-2">
