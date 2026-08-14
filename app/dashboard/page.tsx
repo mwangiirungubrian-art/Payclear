@@ -20,23 +20,29 @@ export default function DashboardPage() {
       }
       setUser(user);
 
-      const { data: jobs } = await supabase
-        .from("jobs")
-        .select("*")
-        .eq("contact_email", user.email)
-        .order("created_at", { ascending: false });
-
-      if (jobs) setJobs(jobs);
-
-      const { data: subs } = await supabase
+      // Check subscription
+      const { data: subData } = await supabase
         .from("subscriptions")
         .select("*")
         .eq("email", user.email)
         .order("created_at", { ascending: false })
         .limit(1);
 
-      if (subs && subs.length > 0) setSubscription(subs[0]);
+      if (!subData || subData.length === 0) {
+        window.location.href = "/dashboard/upgrade";
+        return;
+      }
 
+      setSubscription(subData[0]);
+
+      // Get jobs
+      const { data: jobData } = await supabase
+        .from("jobs")
+        .select("*")
+        .eq("contact_email", user.email)
+        .order("created_at", { ascending: false });
+
+      if (jobData) setJobs(jobData);
       setLoading(false);
     };
 
@@ -80,7 +86,7 @@ export default function DashboardPage() {
       <section className="max-w-4xl mx-auto px-6 py-12">
 
         {/* Subscription Status */}
-        {subscription ? (
+        {subscription && (
           <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 mb-10">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div>
@@ -105,13 +111,6 @@ export default function DashboardPage() {
               </a>
             </div>
           </div>
-        ) : (
-          <div className="bg-gray-50 border border-gray-100 rounded-2xl p-6 mb-10 text-center">
-            <p className="text-gray-500 mb-4">You don't have an active plan yet.</p>
-            <a href="/checkout" className="bg-blue-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-blue-700 text-sm">
-              View Plans →
-            </a>
-          </div>
         )}
 
         {/* Job Listings */}
@@ -123,7 +122,7 @@ export default function DashboardPage() {
             </a>
           ) : (
             <a href="/checkout" className="bg-blue-600 text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-blue-700">
-              + Buy Posts
+              + Buy More Posts
             </a>
           )}
         </div>
@@ -131,7 +130,7 @@ export default function DashboardPage() {
         {jobs.length === 0 ? (
           <div className="text-center py-20 border border-gray-100 rounded-2xl">
             <p className="text-gray-400 text-lg mb-4">No jobs posted yet</p>
-            <a href="/checkout" className="bg-blue-600 text-white px-8 py-4 rounded-full font-semibold hover:bg-blue-700">
+            <a href="/post-job" className="bg-blue-600 text-white px-8 py-4 rounded-full font-semibold hover:bg-blue-700">
               Post Your First Job →
             </a>
           </div>
