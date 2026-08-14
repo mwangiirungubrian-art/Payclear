@@ -37,7 +37,24 @@ export default function PostJobPage() {
     setLoading(true);
     setError("");
 
-    const { error } = await supabase.from("jobs").insert([{
+    const { data: { user } } = await supabase.auth.getUser();
+
+    const { data: subData } = await supabase
+      .from("subscriptions")
+      .select("*")
+      .eq("email", user?.email || form.contact_email)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    const sub = subData && subData.length > 0 ? subData[0] : null;
+
+    if (sub && sub.posts_remaining <= 0) {
+      setError("You have no posts remaining. Please upgrade your plan.");
+      setLoading(false);
+      return;
+    }
+
+    const { error: jobError } = await supabase.from("jobs").insert([{
       title: form.title,
       company: form.company,
       location: form.location,
@@ -54,12 +71,21 @@ export default function PostJobPage() {
       apply_url: applyMethod === "ats" ? form.apply_url : null,
     }]);
 
-    setLoading(false);
-    if (error) {
+    if (jobError) {
       setError("Something went wrong. Please try again.");
-    } else {
-      setSubmitted(true);
+      setLoading(false);
+      return;
     }
+
+    if (sub) {
+      await supabase
+        .from("subscriptions")
+        .update({ posts_remaining: sub.posts_remaining - 1 })
+        .eq("id", sub.id);
+    }
+
+    setLoading(false);
+    setSubmitted(true);
   };
 
   if (submitted) {
@@ -154,7 +180,7 @@ export default function PostJobPage() {
             </select>
           </div>
 
-          {/* Salary Type Toggle */}
+          {/* Salary Type */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-3">Salary Type *</label>
             <div className="grid grid-cols-2 gap-3">
@@ -177,7 +203,6 @@ export default function PostJobPage() {
             </div>
           </div>
 
-          {/* Salary Range fields */}
           {salaryType === "range" && (
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Salary Range (KES per month) *</label>
@@ -189,7 +214,6 @@ export default function PostJobPage() {
             </div>
           )}
 
-          {/* Fixed Salary field */}
           {salaryType === "fixed" && (
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Fixed Salary (KES per month) *</label>
