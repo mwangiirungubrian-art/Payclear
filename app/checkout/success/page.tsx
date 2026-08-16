@@ -31,6 +31,7 @@ export default function SuccessPage() {
       else if (planParam === "enterprise-plan") { posts_remaining = 999; featured_remaining = 999; days = 365; }
 
       const userEmail = user?.email || "";
+      const isSinglePost = planParam === "standard-listing" || planParam === "featured-listing";
 
       if (userEmail) {
         await supabase.from("subscriptions").insert([{
@@ -40,6 +41,8 @@ export default function SuccessPage() {
           featured_remaining,
           expires_at: new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString(),
         }]);
+        setStep("done");
+      } else if (isSinglePost) {
         setStep("done");
       } else {
         setStep("account");
