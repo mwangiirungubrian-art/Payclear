@@ -33,7 +33,8 @@ export default function SuccessPage() {
       const userEmail = user?.email || "";
       const isSinglePost = planParam === "standard-listing" || planParam === "featured-listing";
 
-      if (userEmail) {
+      if (userEmail && !isSinglePost) {
+        // Logged in + subscription plan = save subscription
         await supabase.from("subscriptions").insert([{
           email: userEmail,
           plan: planParam,
@@ -43,8 +44,10 @@ export default function SuccessPage() {
         }]);
         setStep("done");
       } else if (isSinglePost) {
+        // Single post = no account needed
         setStep("done");
       } else {
+        // Not logged in + subscription plan = create account
         setStep("account");
       }
     };
@@ -108,7 +111,7 @@ export default function SuccessPage() {
             <div className="text-center mb-8">
               <div className="text-5xl mb-4">🎉</div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Payment Successful!</h1>
-              <p className="text-gray-500">Now create your account to access your dashboard and start posting jobs.</p>
+              <p className="text-gray-500">Create your account to access your dashboard and start posting jobs.</p>
             </div>
 
             {error && (
