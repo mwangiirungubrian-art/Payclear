@@ -20,7 +20,6 @@ export default function DashboardPage() {
       }
       setUser(user);
 
-      // Check subscription
       const { data: subData } = await supabase
         .from("subscriptions")
         .select("*")
@@ -35,7 +34,6 @@ export default function DashboardPage() {
 
       setSubscription(subData[0]);
 
-      // Get jobs
       const { data: jobData } = await supabase
         .from("jobs")
         .select("*")
@@ -53,6 +51,27 @@ export default function DashboardPage() {
     if (!confirm("Are you sure you want to delete this job?")) return;
     await supabase.from("jobs").delete().eq("id", id);
     setJobs(jobs.filter((job) => job.id !== id));
+  };
+
+  const handleFeature = async (id: number) => {
+    if (!subscription || subscription.featured_remaining <= 0) return;
+    await supabase.from("jobs").update({ featured: true }).eq("id", id);
+    await supabase
+      .from("subscriptions")
+      .update({ featured_remaining: subscription.featured_remaining - 1 })
+      .eq("id", subscription.id);
+    setJobs(jobs.map((job) => job.id === id ? { ...job, featured: true } : job));
+    setSubscription({ ...subscription, featured_remaining: subscription.featured_remaining - 1 });
+  };
+
+  const handleUnfeature = async (id: number) => {
+    await supabase.from("jobs").update({ featured: false }).eq("id", id);
+    await supabase
+      .from("subscriptions")
+      .update({ featured_remaining: subscription.featured_remaining + 1 })
+      .eq("id", subscription.id);
+    setJobs(jobs.map((job) => job.id === id ? { ...job, featured: false } : job));
+    setSubscription({ ...subscription, featured_remaining: subscription.featured_remaining + 1 });
   };
 
   const getPlanLabel = (plan: string) => {
@@ -137,7 +156,7 @@ export default function DashboardPage() {
         ) : (
           <div className="flex flex-col gap-6">
             {jobs.map((job) => (
-              <div key={job.id} className="border border-gray-200 rounded-2xl p-6">
+              <div key={job.id} className={`border rounded-2xl p-6 ${job.featured ? "border-blue-300 bg-blue-50" : "border-gray-200"}`}>
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-2">
@@ -158,13 +177,29 @@ export default function DashboardPage() {
                       <span className="text-gray-400 text-sm font-normal ml-1">/ month</span>
                     </p>
                   </div>
-                  <div className="flex flex-col gap-2">
-                    <a href={`/jobs/${job.id}`} className="text-blue-600 text-sm font-medium hover:underline text-right">
+                  <div className="flex flex-col gap-2 text-right">
+                    <a href={`/jobs/${job.id}`} className="text-blue-600 text-sm font-medium hover:underline">
                       View listing
                     </a>
+                    {!job.featured && subscription && subscription.featured_remaining > 0 && (
+                      <button
+                        onClick={() => handleFeature(job.id)}
+                        className="text-green-600 text-sm font-medium hover:underline"
+                      >
+                        ⭐ Make Featured
+                      </button>
+                    )}
+                    {job.featured && (
+                      <button
+                        onClick={() => handleUnfeature(job.id)}
+                        className="text-orange-500 text-sm font-medium hover:underline"
+                      >
+                        Remove Featured
+                      </button>
+                    )}
                     <button
                       onClick={() => handleDelete(job.id)}
-                      className="text-red-500 text-sm font-medium hover:underline text-right"
+                      className="text-red-500 text-sm font-medium hover:underline"
                     >
                       Delete
                     </button>
