@@ -1,15 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [attempts, setAttempts] = useState(0);
   const [locked, setLocked] = useState(false);
+
+  useEffect(() => {
+    const checkExistingSession = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: adminData } = await supabase
+          .from("admins")
+          .select("*")
+          .eq("email", user.email)
+          .limit(1);
+
+        if (adminData && adminData.length > 0) {
+          window.location.href = "/admin/dashboard";
+          return;
+        }
+      }
+      setLoading(false);
+    };
+
+    checkExistingSession();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +63,6 @@ export default function AdminLoginPage() {
       return;
     }
 
-    // Check if user is in admins table
     const { data: adminData } = await supabase
       .from("admins")
       .select("*")
@@ -51,7 +71,15 @@ export default function AdminLoginPage() {
 
     if (!adminData || adminData.length === 0) {
       await supabase.auth.signOut();
-      setAttempts(attempts + 1);
+      const newAttempts = attempts + 1;
+      setAttempts(newAttempts);
+      if (newAttempts >= 5) {
+        setLocked(true);
+        setTimeout(() => {
+          setLocked(false);
+          setAttempts(0);
+        }, 30 * 60 * 1000);
+      }
       setError("Invalid credentials.");
       setLoading(false);
       return;
@@ -59,6 +87,14 @@ export default function AdminLoginPage() {
 
     window.location.href = "/admin/dashboard";
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+        <p className="text-gray-600 text-sm">Checking session...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-950 font-sans flex items-center justify-center px-6">
