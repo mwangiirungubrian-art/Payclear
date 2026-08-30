@@ -17,6 +17,8 @@ export default function AdminDashboardPage() {
   const [newAdminRole, setNewAdminRole] = useState("support");
   const [addingAdmin, setAddingAdmin] = useState(false);
   const [notification, setNotification] = useState("");
+  const [expandedJob, setExpandedJob] = useState<number | null>(null);
+  const [expandedSub, setExpandedSub] = useState<number | null>(null);
 
   useEffect(() => {
     const init = async () => {
@@ -42,7 +44,6 @@ export default function AdminDashboardPage() {
       if (subsData) setSubscriptions(subsData);
       if (contactsData) setContacts(contactsData);
       if (adminsData) setAdmins(adminsData);
-
       setLoading(false);
     };
 
@@ -57,82 +58,77 @@ export default function AdminDashboardPage() {
   const handleDeleteJob = async (id: number) => {
     if (!confirm("Delete this job?")) return;
     await supabase.from("jobs").delete().eq("id", id);
-    setJobs(jobs.filter((j) => j.id !== id));
-    showNotification("Job deleted successfully");
+    setJobs(jobs.filter((j: any) => j.id !== id));
+    showNotification("Job deleted");
   };
 
   const handleFeatureJob = async (id: number, featured: boolean) => {
     await supabase.from("jobs").update({ featured: !featured }).eq("id", id);
-    setJobs(jobs.map((j) => j.id === id ? { ...j, featured: !featured } : j));
-    showNotification(featured ? "Featured removed" : "Job featured successfully");
+    setJobs(jobs.map((j: any) => j.id === id ? { ...j, featured: !featured } : j));
+    showNotification(featured ? "Featured removed" : "Job featured!");
   };
 
-  const handleReply = async (contact: any) => {
+  const handleReply = (contact: any) => {
     setReplyingTo(contact);
-    setReplyMessage(`Hi ${contact.name},\n\nThank you for reaching out to Luravo.\n\n`);
+    setReplyMessage(`Hi ${contact.name},\n\nThank you for reaching out to Luravo.\n\nWe have reviewed your inquiry and would love to discuss how Luravo can support ${contact.company}.\n\nBest regards,\nLuravo Team\nhello@luravo.com`);
   };
 
   const handleSendReply = () => {
-    const subject = `Re: Your Luravo Enterprise Inquiry - ${replyingTo.company}`;
+    const subject = encodeURIComponent(`Re: Your Luravo Inquiry - ${replyingTo.company}`);
     const body = encodeURIComponent(replyMessage);
-    window.open(`mailto:${replyingTo.email}?subject=${encodeURIComponent(subject)}&body=${body}`);
-    setReplyingTo(null);
-    setReplyMessage("");
-    showNotification("Email client opened!");
+    window.location.href = `mailto:${replyingTo.email}?subject=${subject}&body=${body}`;
+    setTimeout(() => {
+      setReplyingTo(null);
+      setReplyMessage("");
+      showNotification("Reply opened in email app!");
+    }, 500);
+  };
+
+  const handleCopyReply = () => {
+    navigator.clipboard.writeText(replyMessage);
+    showNotification("Message copied!");
   };
 
   const handleGeneratePDF = async (sub: any) => {
-    const { data: subJobs } = await supabase
-      .from("jobs")
-      .select("*")
-      .eq("contact_email", sub.email);
-
+    const { data: subJobs } = await supabase.from("jobs").select("*").eq("contact_email", sub.email);
     const avgSalary = subJobs && subJobs.length > 0
-  ? Math.round(subJobs.reduce((sum: number, j: any) => sum + (j.salary_min + j.salary_max) / 2, 0) / subJobs.length)
-  : 0;
+      ? Math.round(subJobs.reduce((sum: number, j: any) => sum + (j.salary_min + j.salary_max) / 2, 0) / subJobs.length)
+      : 0;
 
-    const content = `
-LURAVO SALARY BENCHMARKING REPORT
+    const content = `LURAVO SALARY BENCHMARKING REPORT
 Generated: ${new Date().toLocaleDateString()}
 Prepared for: ${sub.email}
-Plan: ${sub.plan}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Plan: ${getPlanLabel(sub.plan)}
 
 SUMMARY
 Total Jobs Posted: ${subJobs?.length || 0}
 Average Salary: KES ${avgSalary.toLocaleString()} per month
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Plan Expires: ${new Date(sub.expires_at).toLocaleDateString()}
 
 YOUR JOB LISTINGS
-${subJobs?.map((j: any, i: number) => `
-${i + 1}. ${j.title} - ${j.company}
-   Location: ${j.location}
-   Level: ${j.level} | Type: ${j.type}
+${subJobs?.map((j: any, i: number) => `${i + 1}. ${j.title} - ${j.company}
+   Location: ${j.location} | Level: ${j.level}
    Salary: ${j.salary_type === "fixed" ? `KES ${j.salary_min?.toLocaleString()} fixed` : `KES ${j.salary_min?.toLocaleString()} - KES ${j.salary_max?.toLocaleString()}`}
 `).join("") || "No jobs posted yet"}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 PLATFORM INSIGHTS
 Total Jobs on Luravo: ${jobs.length}
-Your Share of Listings: ${subJobs ? Math.round((subJobs.length / jobs.length) * 100) : 0}%
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Posts Remaining: ${sub.posts_remaining}
+Featured Remaining: ${sub.featured_remaining}
 
 luravo.com | hello@luravo.com
-Every Job. Every Salary. No Exceptions.
-    `;
+Every Job. Every Salary. No Exceptions.`;
 
     const blob = new Blob([content], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `Luravo_Report_${sub.email}_${new Date().toLocaleDateString().replace(/\//g, "-")}.txt`;
+    a.download = `Luravo_Report_${sub.email.split("@")[0]}_${new Date().toLocaleDateString("en-KE").replace(/\//g, "-")}.txt`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showNotification("Report downloaded! Attach to email and send to employer.");
+    showNotification("Report downloaded!");
   };
 
   const handleAddAdmin = async (e: React.FormEvent) => {
@@ -143,14 +139,14 @@ Every Job. Every Salary. No Exceptions.
     if (data) setAdmins(data);
     setNewAdminEmail("");
     setAddingAdmin(false);
-    showNotification(`${newAdminEmail} added as ${newAdminRole}`);
+    showNotification(`${newAdminEmail} added!`);
   };
 
   const handleRemoveAdmin = async (id: number, email: string) => {
-    if (email === admin.email) { showNotification("You cannot remove yourself!"); return; }
-    if (!confirm(`Remove ${email} from admin?`)) return;
+    if (email === admin.email) { showNotification("Cannot remove yourself!"); return; }
+    if (!confirm(`Remove ${email}?`)) return;
     await supabase.from("admins").delete().eq("id", id);
-    setAdmins(admins.filter((a) => a.id !== id));
+    setAdmins(admins.filter((a: any) => a.id !== id));
     showNotification("Admin removed");
   };
 
@@ -160,12 +156,14 @@ Every Job. Every Salary. No Exceptions.
   };
 
   const getPlanLabel = (plan: string) => {
-    if (plan === "standard-listing") return "Standard";
-    if (plan === "featured-listing") return "Featured";
-    if (plan === "growth-plan") return "Growth";
-    if (plan === "pro-plan") return "Pro";
-    if (plan === "enterprise-plan") return "Enterprise";
-    return plan;
+    const labels: Record<string, string> = {
+      "standard-listing": "Standard",
+      "featured-listing": "Featured",
+      "growth-plan": "Growth",
+      "pro-plan": "Pro",
+      "enterprise-plan": "Enterprise",
+    };
+    return labels[plan] || plan;
   };
 
   const getPlanColor = (plan: string) => {
@@ -176,13 +174,17 @@ Every Job. Every Salary. No Exceptions.
   };
 
   const totalRevenue = subscriptions.reduce((sum: number, sub: any) => {
-    if (sub.plan === "standard-listing") return sum + 1500;
-    if (sub.plan === "featured-listing") return sum + 5000;
-    if (sub.plan === "growth-plan") return sum + 9999;
-    if (sub.plan === "pro-plan") return sum + 24999;
-    if (sub.plan === "enterprise-plan") return sum + 79999;
-    return sum;
+    const prices: Record<string, number> = {
+      "standard-listing": 1500,
+      "featured-listing": 5000,
+      "growth-plan": 9999,
+      "pro-plan": 24999,
+      "enterprise-plan": 79999,
+    };
+    return sum + (prices[sub.plan] || 0);
   }, 0);
+
+  const isSuperAdmin = admin?.role === "super_admin";
 
   if (loading) {
     return (
@@ -192,25 +194,27 @@ Every Job. Every Salary. No Exceptions.
     );
   }
 
+  const tabs = isSuperAdmin
+    ? ["overview", "jobs", "subscriptions", "contacts", "team"]
+    : ["contacts", "subscriptions", "jobs"];
+
   return (
     <div className="min-h-screen bg-gray-950 font-sans">
 
-      {/* Notification */}
       {notification && (
         <div className="fixed top-4 right-4 bg-green-800 text-green-200 px-6 py-3 rounded-xl text-sm font-medium z-50 shadow-lg">
           ✓ {notification}
         </div>
       )}
 
-      {/* Reply Modal */}
       {replyingTo && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-6">
           <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 w-full max-w-lg">
             <h3 className="text-white font-bold mb-1">Reply to {replyingTo.name}</h3>
             <p className="text-gray-500 text-sm mb-4">{replyingTo.email} · {replyingTo.company}</p>
-            <div className="bg-gray-800 rounded-xl p-3 mb-4 text-gray-400 text-xs">
-              <p className="font-semibold text-gray-300 mb-1">Their message:</p>
-              <p>{replyingTo.message}</p>
+            <div className="bg-gray-800 rounded-xl p-3 mb-4">
+              <p className="text-gray-400 text-xs font-semibold mb-1">Their message:</p>
+              <p className="text-gray-300 text-sm">{replyingTo.message}</p>
             </div>
             <textarea
               value={replyMessage}
@@ -218,25 +222,24 @@ Every Job. Every Salary. No Exceptions.
               rows={8}
               className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 mb-4"
             />
-            <div className="flex gap-3">
-              <button
-                onClick={handleSendReply}
-                className="bg-blue-600 text-white px-6 py-3 rounded-xl text-sm font-semibold hover:bg-blue-700 flex-1"
-              >
-                Open in Email Client →
+            <div className="flex gap-3 flex-wrap">
+              <button onClick={handleSendReply} className="bg-blue-600 text-white px-6 py-3 rounded-xl text-sm font-semibold hover:bg-blue-700 flex-1">
+                📧 Open in Email App
               </button>
-              <button
-                onClick={() => setReplyingTo(null)}
-                className="bg-gray-800 text-gray-400 px-6 py-3 rounded-xl text-sm font-semibold hover:bg-gray-700"
-              >
+              <button onClick={handleCopyReply} className="bg-gray-700 text-white px-6 py-3 rounded-xl text-sm font-semibold hover:bg-gray-600">
+                📋 Copy
+              </button>
+              <button onClick={() => setReplyingTo(null)} className="bg-gray-800 text-gray-400 px-6 py-3 rounded-xl text-sm font-semibold hover:bg-gray-700 w-full">
                 Cancel
               </button>
             </div>
+            <p className="text-gray-600 text-xs mt-3 text-center">
+              If email app does not open, copy the message and paste into Gmail or Outlook manually.
+            </p>
           </div>
         </div>
       )}
 
-      {/* Admin Navbar */}
       <nav className="bg-gray-900 border-b border-gray-800 px-8 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
@@ -246,7 +249,7 @@ Every Job. Every Salary. No Exceptions.
           </div>
           <div>
             <p className="text-white font-bold text-sm">Luravo Admin</p>
-            <p className="text-gray-500 text-xs">{admin?.role === "super_admin" ? "Super Admin" : "Support"} · {admin?.email}</p>
+            <p className="text-gray-500 text-xs">{isSuperAdmin ? "Super Admin" : "Support Agent"} · {admin?.email}</p>
           </div>
         </div>
         <button onClick={handleLogout} className="text-gray-500 hover:text-red-400 text-sm transition">
@@ -256,29 +259,39 @@ Every Job. Every Salary. No Exceptions.
 
       <div className="max-w-6xl mx-auto px-6 py-10">
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-            <p className="text-gray-500 text-xs mb-1">Total Jobs</p>
-            <p className="text-white text-3xl font-bold">{jobs.length}</p>
+        {isSuperAdmin && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+              <p className="text-gray-500 text-xs mb-1">Total Jobs</p>
+              <p className="text-white text-3xl font-bold">{jobs.length}</p>
+            </div>
+            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+              <p className="text-gray-500 text-xs mb-1">Subscriptions</p>
+              <p className="text-white text-3xl font-bold">{subscriptions.length}</p>
+            </div>
+            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+              <p className="text-gray-500 text-xs mb-1">Contact Requests</p>
+              <p className="text-white text-3xl font-bold">{contacts.length}</p>
+            </div>
+            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+              <p className="text-gray-500 text-xs mb-1">Est. Revenue</p>
+              <p className="text-green-400 text-3xl font-bold">KES {totalRevenue.toLocaleString()}</p>
+            </div>
           </div>
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-            <p className="text-gray-500 text-xs mb-1">Subscriptions</p>
-            <p className="text-white text-3xl font-bold">{subscriptions.length}</p>
-          </div>
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-            <p className="text-gray-500 text-xs mb-1">Contact Requests</p>
-            <p className="text-white text-3xl font-bold">{contacts.length}</p>
-          </div>
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-            <p className="text-gray-500 text-xs mb-1">Est. Revenue</p>
-            <p className="text-green-400 text-3xl font-bold">KES {totalRevenue.toLocaleString()}</p>
-          </div>
-        </div>
+        )}
 
-        {/* Tabs */}
+        {!isSuperAdmin && (
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 mb-8 flex items-center gap-4">
+            <div className="w-10 h-10 bg-blue-900 rounded-xl flex items-center justify-center text-xl">🛠️</div>
+            <div>
+              <p className="text-white font-semibold">Support Agent Dashboard</p>
+              <p className="text-gray-500 text-sm">Reply to contacts, view subscriptions and manage jobs.</p>
+            </div>
+          </div>
+        )}
+
         <div className="flex gap-2 mb-8 border-b border-gray-800 pb-4 flex-wrap">
-          {["overview", "jobs", "subscriptions", "contacts", ...(admin?.role === "super_admin" ? ["team"] : [])].map((tab) => (
+          {tabs.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -292,14 +305,13 @@ Every Job. Every Salary. No Exceptions.
           ))}
         </div>
 
-        {/* OVERVIEW TAB */}
-        {activeTab === "overview" && (
+        {activeTab === "overview" && isSuperAdmin && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
               <h3 className="text-white font-semibold mb-4">Latest Jobs</h3>
               <div className="flex flex-col gap-3">
-                {jobs.slice(0, 5).map((job) => (
-                  <div key={job.id} className="flex items-center justify-between">
+                {jobs.slice(0, 5).map((job: any) => (
+                  <div key={job.id} onClick={() => setActiveTab("jobs")} className="flex items-center justify-between border-b border-gray-800 pb-2 cursor-pointer hover:bg-gray-800 rounded-lg px-2 py-1">
                     <div>
                       <p className="text-white text-sm font-medium">{job.title}</p>
                       <p className="text-gray-500 text-xs">{job.company}</p>
@@ -307,132 +319,182 @@ Every Job. Every Salary. No Exceptions.
                     <span className="text-green-400 text-xs">KES {job.salary_max?.toLocaleString()}</span>
                   </div>
                 ))}
+                <button onClick={() => setActiveTab("jobs")} className="text-blue-500 text-xs hover:underline text-left mt-2">View all jobs →</button>
               </div>
             </div>
+
             <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
               <h3 className="text-white font-semibold mb-4">Latest Subscriptions</h3>
               <div className="flex flex-col gap-3">
-                {subscriptions.slice(0, 5).map((sub) => (
-                  <div key={sub.id} className="flex items-center justify-between">
+                {subscriptions.slice(0, 5).map((sub: any) => (
+                  <div key={sub.id} onClick={() => setActiveTab("subscriptions")} className="flex items-center justify-between border-b border-gray-800 pb-2 cursor-pointer hover:bg-gray-800 rounded-lg px-2 py-1">
                     <div>
                       <p className="text-white text-sm font-medium">{sub.email}</p>
-                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${getPlanColor(sub.plan)}`}>
-                        {getPlanLabel(sub.plan)}
-                      </span>
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${getPlanColor(sub.plan)}`}>{getPlanLabel(sub.plan)}</span>
                     </div>
                     <p className="text-gray-500 text-xs">{new Date(sub.created_at).toLocaleDateString()}</p>
                   </div>
                 ))}
+                <button onClick={() => setActiveTab("subscriptions")} className="text-blue-500 text-xs hover:underline text-left mt-2">View all →</button>
               </div>
             </div>
+
+            {contacts.length > 0 && (
+              <div className="bg-gray-900 border border-red-900 rounded-2xl p-6 md:col-span-2">
+                <h3 className="text-white font-semibold mb-4">🔴 Pending Contact Requests ({contacts.length})</h3>
+                <div className="flex flex-col gap-3">
+                  {contacts.slice(0, 3).map((contact: any) => (
+                    <div key={contact.id} className="flex items-center justify-between border-b border-gray-800 pb-2">
+                      <div>
+                        <p className="text-white text-sm font-medium">{contact.name} · {contact.company}</p>
+                        <p className="text-gray-500 text-xs">{contact.email}</p>
+                      </div>
+                      <button onClick={() => { setActiveTab("contacts"); handleReply(contact); }} className="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-xs font-semibold hover:bg-blue-700">
+                        Reply →
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
-        {/* JOBS TAB */}
         {activeTab === "jobs" && (
           <div className="flex flex-col gap-4">
             <h2 className="text-white text-xl font-bold mb-2">All Jobs ({jobs.length})</h2>
-            {jobs.map((job) => (
-              <div key={job.id} className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="text-white font-semibold">{job.title}</p>
-                      {job.featured && <span className="bg-blue-900 text-blue-300 text-xs px-2 py-0.5 rounded-full">⭐ Featured</span>}
+            {jobs.map((job: any) => (
+              <div key={job.id} className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+                <div className="p-5 cursor-pointer hover:bg-gray-800 transition" onClick={() => setExpandedJob(expandedJob === job.id ? null : job.id)}>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="text-white font-semibold">{job.title}</p>
+                        {job.featured && <span className="bg-blue-900 text-blue-300 text-xs px-2 py-0.5 rounded-full">⭐ Featured</span>}
+                      </div>
+                      <p className="text-gray-500 text-sm">{job.company} · {job.location}</p>
+                      <p className="text-green-400 text-sm mt-1">
+                        {job.salary_type === "fixed"
+                          ? `KES ${job.salary_min?.toLocaleString()} fixed`
+                          : `KES ${job.salary_min?.toLocaleString()} – ${job.salary_max?.toLocaleString()}`}
+                      </p>
                     </div>
-                    <p className="text-gray-500 text-sm">{job.company} · {job.location}</p>
-                    <p className="text-green-400 text-sm mt-1">
-                      {job.salary_type === "fixed"
-                        ? `KES ${job.salary_min?.toLocaleString()} fixed`
-                        : `KES ${job.salary_min?.toLocaleString()} – ${job.salary_max?.toLocaleString()}`}
-                    </p>
-                    <p className="text-gray-600 text-xs mt-1">{job.contact_email}</p>
-                    <p className="text-gray-700 text-xs">{new Date(job.created_at).toLocaleDateString()}</p>
-                  </div>
-                  <div className="flex flex-col gap-2 text-right">
-                    <button
-                      onClick={() => handleFeatureJob(job.id, job.featured)}
-                      className={`text-xs font-medium hover:underline ${job.featured ? "text-orange-400" : "text-green-400"}`}
-                    >
-                      {job.featured ? "Remove Featured" : "⭐ Make Featured"}
-                    </button>
-                    {admin?.role === "super_admin" && (
-                      <button onClick={() => handleDeleteJob(job.id)} className="text-red-500 text-xs font-medium hover:underline">
-                        Delete
-                      </button>
-                    )}
+                    <span className="text-gray-600 text-xs">{expandedJob === job.id ? "▲" : "▼"}</span>
                   </div>
                 </div>
+                {expandedJob === job.id && (
+                  <div className="border-t border-gray-800 p-5 bg-gray-950">
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <p className="text-gray-500 text-xs mb-1">Contact Email</p>
+                        <p className="text-white text-sm">{job.contact_email}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 text-xs mb-1">Posted</p>
+                        <p className="text-white text-sm">{new Date(job.created_at).toLocaleDateString()}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 text-xs mb-1">Level</p>
+                        <p className="text-white text-sm">{job.level}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 text-xs mb-1">Industry</p>
+                        <p className="text-white text-sm">{job.industry}</p>
+                      </div>
+                    </div>
+                    <p className="text-gray-500 text-xs mb-1">Description</p>
+                    <p className="text-gray-300 text-sm mb-4 leading-relaxed">{job.description}</p>
+                    <div className="flex gap-3 flex-wrap">
+                      <button
+                        onClick={() => handleFeatureJob(job.id, job.featured)}
+                        className={`px-4 py-2 rounded-xl text-xs font-semibold ${job.featured ? "bg-orange-900 text-orange-300 hover:bg-orange-800" : "bg-green-900 text-green-300 hover:bg-green-800"}`}
+                      >
+                        {job.featured ? "Remove Featured" : "⭐ Make Featured"}
+                      </button>
+                      <a href={`/jobs/${job.id}`} target="_blank" rel="noopener noreferrer" className="bg-gray-800 text-gray-300 px-4 py-2 rounded-xl text-xs font-semibold hover:bg-gray-700">
+                        View Live →
+                      </a>
+                      {isSuperAdmin && (
+                        <button onClick={() => handleDeleteJob(job.id)} className="bg-red-900 text-red-300 px-4 py-2 rounded-xl text-xs font-semibold hover:bg-red-800">
+                          Delete Job
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
         )}
 
-        {/* SUBSCRIPTIONS TAB */}
         {activeTab === "subscriptions" && (
           <div className="flex flex-col gap-4">
             <h2 className="text-white text-xl font-bold mb-2">All Subscriptions ({subscriptions.length})</h2>
-            {subscriptions.map((sub) => (
-              <div key={sub.id} className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-                <div className="flex items-center justify-between flex-wrap gap-4">
-                  <div>
-                    <p className="text-white font-semibold">{sub.email}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${getPlanColor(sub.plan)}`}>
-                        {getPlanLabel(sub.plan)}
-                      </span>
-                      <span className="text-gray-500 text-xs">
-                        Expires: {new Date(sub.expires_at).toLocaleDateString()}
-                      </span>
+            {subscriptions.map((sub: any) => (
+              <div key={sub.id} className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+                <div className="p-5 cursor-pointer hover:bg-gray-800 transition" onClick={() => setExpandedSub(expandedSub === sub.id ? null : sub.id)}>
+                  <div className="flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                      <p className="text-white font-semibold">{sub.email}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${getPlanColor(sub.plan)}`}>{getPlanLabel(sub.plan)}</span>
+                        <span className="text-gray-500 text-xs">Expires: {new Date(sub.expires_at).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-6 text-center items-center">
+                      <div>
+                        <p className="text-blue-400 font-bold text-xl">{sub.posts_remaining}</p>
+                        <p className="text-gray-600 text-xs">Posts left</p>
+                      </div>
+                      <div>
+                        <p className="text-green-400 font-bold text-xl">{sub.featured_remaining}</p>
+                        <p className="text-gray-600 text-xs">Featured left</p>
+                      </div>
+                      <span className="text-gray-600 text-xs">{expandedSub === sub.id ? "▲" : "▼"}</span>
                     </div>
                   </div>
-                  <div className="flex gap-6 text-center">
-                    <div>
-                      <p className="text-blue-400 font-bold text-xl">{sub.posts_remaining}</p>
-                      <p className="text-gray-600 text-xs">Posts left</p>
-                    </div>
-                    <div>
-                      <p className="text-green-400 font-bold text-xl">{sub.featured_remaining}</p>
-                      <p className="text-gray-600 text-xs">Featured left</p>
-                    </div>
-                  </div>
-                  {sub.plan === "enterprise-plan" && (
-                    <button
-                      onClick={() => handleGeneratePDF(sub)}
-                      className="bg-purple-700 text-white px-4 py-2 rounded-xl text-xs font-semibold hover:bg-purple-600"
-                    >
-                      📄 Generate PDF Report
-                    </button>
-                  )}
                 </div>
+                {expandedSub === sub.id && (
+                  <div className="border-t border-gray-800 p-5 bg-gray-950 flex gap-3 flex-wrap">
+                    {sub.plan === "enterprise-plan" && (
+                      <button onClick={() => handleGeneratePDF(sub)} className="bg-purple-900 text-purple-300 px-4 py-2 rounded-xl text-xs font-semibold hover:bg-purple-800">
+                        📄 Generate PDF Report
+                      </button>
+                    )}
+                    <a href={`mailto:${sub.email}`} className="bg-blue-900 text-blue-300 px-4 py-2 rounded-xl text-xs font-semibold hover:bg-blue-800">
+                      📧 Email Employer
+                    </a>
+                  </div>
+                )}
               </div>
             ))}
           </div>
         )}
 
-        {/* CONTACTS TAB */}
         {activeTab === "contacts" && (
           <div className="flex flex-col gap-4">
             <h2 className="text-white text-xl font-bold mb-2">Contact Requests ({contacts.length})</h2>
             {contacts.length === 0 ? (
-              <p className="text-gray-500">No contact requests yet.</p>
+              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-10 text-center">
+                <p className="text-gray-500">No contact requests yet.</p>
+              </div>
             ) : (
-              contacts.map((contact) => (
+              contacts.map((contact: any) => (
                 <div key={contact.id} className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-                  <div className="flex items-start justify-between flex-wrap gap-4">
-                    <div className="flex-1">
-                      <p className="text-white font-semibold">{contact.name} · {contact.company}</p>
-                      <p className="text-blue-400 text-sm mt-1">{contact.email}</p>
-                      <p className="text-gray-500 text-xs mt-1">Team size: {contact.team_size}</p>
-                      <p className="text-gray-400 text-sm mt-3 max-w-lg leading-relaxed">{contact.message}</p>
-                      <p className="text-gray-700 text-xs mt-2">{new Date(contact.created_at).toLocaleDateString()}</p>
-                    </div>
-                    <button
-                      onClick={() => handleReply(contact)}
-                      className="bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700"
-                    >
-                      Reply →
+                  <div className="mb-4">
+                    <p className="text-white font-semibold text-lg">{contact.name}</p>
+                    <p className="text-blue-400 text-sm">{contact.email}</p>
+                    <p className="text-gray-500 text-sm">{contact.company} · {contact.team_size}</p>
+                    <p className="text-gray-400 text-sm mt-3 leading-relaxed">{contact.message}</p>
+                    <p className="text-gray-700 text-xs mt-2">{new Date(contact.created_at).toLocaleDateString()}</p>
+                  </div>
+                  <div className="flex gap-3 flex-wrap">
+                    <button onClick={() => handleReply(contact)} className="bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700">
+                      ✉️ Reply
                     </button>
+                    <a href={`mailto:${contact.email}`} className="bg-gray-800 text-gray-300 px-5 py-2 rounded-xl text-sm font-semibold hover:bg-gray-700">
+                      📧 Quick Email
+                    </a>
                   </div>
                 </div>
               ))
@@ -440,12 +502,9 @@ Every Job. Every Salary. No Exceptions.
           </div>
         )}
 
-        {/* TEAM TAB — Super Admin Only */}
-        {activeTab === "team" && admin?.role === "super_admin" && (
+        {activeTab === "team" && isSuperAdmin && (
           <div className="flex flex-col gap-6">
             <h2 className="text-white text-xl font-bold">Team Management</h2>
-
-            {/* Add Admin */}
             <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
               <h3 className="text-white font-semibold mb-4">Add Team Member</h3>
               <form onSubmit={handleAddAdmin} className="flex flex-col gap-4">
@@ -465,24 +524,18 @@ Every Job. Every Salary. No Exceptions.
                   <option value="support">Support Agent</option>
                   <option value="super_admin">Super Admin</option>
                 </select>
-                <button
-                  type="submit"
-                  disabled={addingAdmin}
-                  className="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50"
-                >
+                <button type="submit" disabled={addingAdmin} className="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50">
                   {addingAdmin ? "Adding..." : "Add Team Member"}
                 </button>
               </form>
               <p className="text-gray-600 text-xs mt-3">
-  ⚠️ Next step: Go to Supabase → Authentication → Users → Add User and create a password for this person. Share the password with them so they can log in at luravo.com/admin
-</p>
+                After adding, go to Supabase → Authentication → Users → Add User and create a password for this person. Share it with them to log in at luravo.com/admin
+              </p>
             </div>
-
-            {/* Current Team */}
             <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
               <h3 className="text-white font-semibold mb-4">Current Team ({admins.length})</h3>
               <div className="flex flex-col gap-3">
-                {admins.map((a) => (
+                {admins.map((a: any) => (
                   <div key={a.id} className="flex items-center justify-between border-b border-gray-800 pb-3">
                     <div>
                       <p className="text-white text-sm font-medium">{a.email}</p>
@@ -490,15 +543,11 @@ Every Job. Every Salary. No Exceptions.
                         {a.role === "super_admin" ? "Super Admin" : "Support Agent"}
                       </span>
                     </div>
-                    {a.email !== admin.email && (
-                      <button
-                        onClick={() => handleRemoveAdmin(a.id, a.email)}
-                        className="text-red-500 text-xs hover:underline"
-                      >
+                    {a.email !== admin.email ? (
+                      <button onClick={() => handleRemoveAdmin(a.id, a.email)} className="text-red-500 text-xs hover:underline">
                         Remove
                       </button>
-                    )}
-                    {a.email === admin.email && (
+                    ) : (
                       <span className="text-gray-600 text-xs">You</span>
                     )}
                   </div>
