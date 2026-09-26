@@ -13,6 +13,7 @@ export default function ContactPage() {
     name: "",
     company: "",
     email: "",
+    phone: "",
     team_size: "",
     message: "",
   });
@@ -30,6 +31,7 @@ export default function ContactPage() {
       name: form.name,
       company: form.company,
       email: form.email,
+      phone: form.phone,
       team_size: form.team_size,
       message: form.message,
     }]);
@@ -110,9 +112,15 @@ export default function ContactPage() {
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Work Email *</label>
-            <input required name="email" value={form.email} onChange={handleChange} type="email" placeholder="john@company.com" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Work Email *</label>
+              <input required name="email" value={form.email} onChange={handleChange} type="email" placeholder="john@company.com" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number *</label>
+              <input required name="phone" value={form.phone} onChange={handleChange} type="tel" placeholder="+254 700 000 000" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
           </div>
 
           <div>

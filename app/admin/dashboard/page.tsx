@@ -485,6 +485,7 @@ Every Job. Every Salary. No Exceptions.`;
                     <p className="text-white font-semibold text-lg">{contact.name}</p>
                     <p className="text-blue-400 text-sm">{contact.email}</p>
                     <p className="text-gray-500 text-sm">{contact.company} · {contact.team_size}</p>
+                    <p className="text-green-400 text-sm">📞 {contact.phone}</p>
                     <p className="text-gray-400 text-sm mt-3 leading-relaxed">{contact.message}</p>
                     <p className="text-gray-700 text-xs mt-2">{new Date(contact.created_at).toLocaleDateString()}</p>
                   </div>
