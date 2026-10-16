@@ -83,7 +83,18 @@ export default function PostJobPage() {
         .update({ posts_remaining: sub.posts_remaining - 1 })
         .eq("id", sub.id);
     }
-
+// Save salary intelligence data
+await supabase.from("salary_data").insert([{
+  job_title: form.title,
+  company: form.company,
+  industry: form.industry,
+  level: form.level,
+  location: form.location,
+  salary_min: salaryType === "range" ? parseInt(form.salary_min) : parseInt(form.salary_fixed),
+  salary_max: salaryType === "range" ? parseInt(form.salary_max) : parseInt(form.salary_fixed),
+  salary_fixed: salaryType === "fixed" ? parseInt(form.salary_fixed) : null,
+  salary_type: salaryType,
+}]);
     setLoading(false);
     setSubmitted(true);
   };
