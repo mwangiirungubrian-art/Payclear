@@ -17,10 +17,11 @@ export default function JobsPage() {
   useEffect(() => {
     const fetchJobs = async () => {
       const { data } = await supabase
-        .from("jobs")
-        .select("*")
-        .order("featured", { ascending: false })
-        .order("created_at", { ascending: false });
+  .from("jobs")
+  .select("*")
+  .gt("expires_at", new Date().toISOString())
+  .order("featured", { ascending: false })
+  .order("created_at", { ascending: false });
       if (data) {
         setJobs(data);
         setFiltered(data);
