@@ -68,20 +68,58 @@ export default function AdminDashboardPage() {
     showNotification(featured ? "Featured removed" : "Job featured!");
   };
 
+  const handleMarkActioned = async (contact: any) => {
+    const now = new Date().toISOString();
+    const { error } = await supabase
+      .from("contacts")
+      .update({ status: "actioned", actioned_by: admin.email, actioned_at: now })
+      .eq("id", contact.id);
+
+    if (error) {
+      showNotification("Could not update. Check permissions.");
+      return;
+    }
+
+    setContacts(contacts.map((c: any) =>
+      c.id === contact.id ? { ...c, status: "actioned", actioned_by: admin.email, actioned_at: now } : c
+    ));
+    showNotification("Marked as actioned");
+  };
+
+  const handleReopen = async (contact: any) => {
+    const { error } = await supabase
+      .from("contacts")
+      .update({ status: "new", actioned_by: null, actioned_at: null })
+      .eq("id", contact.id);
+
+    if (error) {
+      showNotification("Could not update. Check permissions.");
+      return;
+    }
+
+    setContacts(contacts.map((c: any) =>
+      c.id === contact.id ? { ...c, status: "new", actioned_by: null, actioned_at: null } : c
+    ));
+    showNotification("Moved back to new");
+  };
+
   const handleReply = (contact: any) => {
     setReplyingTo(contact);
     setReplyMessage(`Hi ${contact.name},\n\nThank you for reaching out to Luravo.\n\nWe have reviewed your inquiry and would love to discuss how Luravo can support ${contact.company}.\n\nBest regards,\nLuravo Team\nhello@luravo.com`);
   };
 
   const handleSendReply = () => {
-    const subject = encodeURIComponent(`Re: Your Luravo Inquiry - ${replyingTo.company}`);
+    const contact = replyingTo;
+    const subject = encodeURIComponent(`Re: Your Luravo Inquiry - ${contact.company}`);
     const body = encodeURIComponent(replyMessage);
-    window.location.href = `mailto:${replyingTo.email}?subject=${subject}&body=${body}`;
+    window.location.href = `mailto:${contact.email}?subject=${subject}&body=${body}`;
     setTimeout(() => {
       setReplyingTo(null);
       setReplyMessage("");
-      showNotification("Reply opened in email app!");
-    }, 500);
+      if (confirm(`Did you send the reply to ${contact.name}? Click OK to mark as actioned.`)) {
+        handleMarkActioned(contact);
+      }
+    }, 800);
   };
 
   const handleCopyReply = () => {
@@ -90,163 +128,155 @@ export default function AdminDashboardPage() {
   };
 
   const handleGeneratePDF = async (sub: any) => {
-   const { jsPDF } = await import("jspdf");
-   const { data: subJobs } = await supabase.from("jobs").select("*").eq("contact_email", sub.email);
-   const { data: allSalaryData } = await supabase.from("salary_data").select("*");
+    const { jsPDF } = await import("jspdf");
+    const { data: subJobs } = await supabase.from("jobs").select("*").eq("contact_email", sub.email);
+    const { data: allSalaryData } = await supabase.from("salary_data").select("*");
 
-  const avgSalary = subJobs && subJobs.length > 0
-    ? Math.round(subJobs.reduce((sum: number, j: any) => sum + (j.salary_min + j.salary_max) / 2, 0) / subJobs.length)
-    : 0;
+    const avgSalary = subJobs && subJobs.length > 0
+      ? Math.round(subJobs.reduce((sum: number, j: any) => sum + (j.salary_min + j.salary_max) / 2, 0) / subJobs.length)
+      : 0;
 
-  const platformAvg = allSalaryData && allSalaryData.length > 0
-    ? Math.round(allSalaryData.reduce((sum: number, j: any) => sum + (j.salary_min + j.salary_max) / 2, 0) / allSalaryData.length)
-    : 0;
+    const platformAvg = allSalaryData && allSalaryData.length > 0
+      ? Math.round(allSalaryData.reduce((sum: number, j: any) => sum + (j.salary_min + j.salary_max) / 2, 0) / allSalaryData.length)
+      : 0;
 
-  const doc = new jsPDF();
-  const pageW = doc.internal.pageSize.getWidth();
+    const doc = new jsPDF();
+    const pageW = doc.internal.pageSize.getWidth();
 
-  // Header background
-  doc.setFillColor(24, 95, 165);
-  doc.rect(0, 0, pageW, 40, "F");
-
-  // Logo text
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(24);
-  doc.setFont("helvetica", "bold");
-  doc.text("lura", 20, 22);
-  doc.setTextColor(77, 168, 232);
-  doc.text("vo", 44, 22);
-
-  // Header subtitle
-  doc.setTextColor(200, 220, 255);
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.text("SALARY BENCHMARKING REPORT", 20, 32);
-
-  // Date and recipient
-  doc.setTextColor(100, 100, 100);
-  doc.setFontSize(9);
-  doc.text(`Generated: ${new Date().toLocaleDateString("en-KE", { year: "numeric", month: "long", day: "numeric" })}`, pageW - 20, 50, { align: "right" });
-  doc.text(`Prepared for: ${sub.email}`, pageW - 20, 57, { align: "right" });
-  doc.text(`Plan: Enterprise`, pageW - 20, 64, { align: "right" });
-
-  // Section: Summary
-  doc.setFillColor(240, 247, 255);
-  doc.rect(15, 70, pageW - 30, 35, "F");
-  doc.setTextColor(24, 95, 165);
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "bold");
-  doc.text("EXECUTIVE SUMMARY", 20, 82);
-
-  doc.setTextColor(50, 50, 50);
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.text(`Total Jobs Posted: ${subJobs?.length || 0}`, 20, 92);
-  doc.text(`Your Average Salary: KES ${avgSalary.toLocaleString()}`, 80, 92);
-  doc.text(`Platform Average: KES ${platformAvg.toLocaleString()}`, 155, 92);
-  doc.text(`Plan Expires: ${new Date(sub.expires_at).toLocaleDateString()}`, 20, 100);
-  doc.text(`Posts Remaining: ${sub.posts_remaining}`, 80, 100);
-  doc.text(`Featured Remaining: ${sub.featured_remaining}`, 155, 100);
-
-  // Section: Job Listings
-  let y = 120;
-  doc.setFillColor(24, 95, 165);
-  doc.rect(15, y - 8, pageW - 30, 10, "F");
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(11);
-  doc.setFont("helvetica", "bold");
-  doc.text("YOUR JOB LISTINGS", 20, y);
-
-  y += 10;
-  if (subJobs && subJobs.length > 0) {
-    subJobs.forEach((job: any, i: number) => {
-      if (y > 260) {
-        doc.addPage();
-        y = 20;
-      }
-      doc.setFillColor(i % 2 === 0 ? 249 : 255, i % 2 === 0 ? 250 : 255, i % 2 === 0 ? 252 : 255);
-      doc.rect(15, y, pageW - 30, 18, "F");
-
-      doc.setTextColor(30, 30, 30);
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "bold");
-      doc.text(`${i + 1}. ${job.title}`, 20, y + 7);
-
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(80, 80, 80);
-      doc.setFontSize(8.5);
-      doc.text(`${job.company} · ${job.location} · ${job.level} · ${job.industry}`, 20, y + 13);
-
-      doc.setTextColor(29, 158, 117);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(9);
-      const salaryText = job.salary_type === "fixed"
-        ? `KES ${job.salary_min?.toLocaleString()} fixed`
-        : `KES ${job.salary_min?.toLocaleString()} – ${job.salary_max?.toLocaleString()}`;
-      doc.text(salaryText, pageW - 20, y + 10, { align: "right" });
-
-      y += 20;
-    });
-  } else {
-    doc.setTextColor(150, 150, 150);
-    doc.setFontSize(10);
-    doc.text("No jobs posted yet.", 20, y + 10);
-    y += 20;
-  }
-
-  // Section: Platform Insights
-  y += 10;
-  if (y > 240) { doc.addPage(); y = 20; }
-
-  doc.setFillColor(24, 95, 165);
-  doc.rect(15, y - 8, pageW - 30, 10, "F");
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(11);
-  doc.setFont("helvetica", "bold");
-  doc.text("PLATFORM SALARY INSIGHTS", 20, y);
-
-  y += 12;
-  doc.setTextColor(50, 50, 50);
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.text(`Total Jobs on Luravo: ${jobs.length}`, 20, y);
-  doc.text(`Total Salary Data Points: ${allSalaryData?.length || 0}`, 100, y);
-  y += 8;
-  doc.text(`Platform Average Salary: KES ${platformAvg.toLocaleString()} per month`, 20, y);
-  y += 8;
-
-  if (allSalaryData && allSalaryData.length > 0) {
-    const industries = [...new Set(allSalaryData.map((d: any) => d.industry))];
-    y += 6;
-    doc.setFont("helvetica", "bold");
-    doc.text("Average by Industry:", 20, y);
-    y += 8;
-    doc.setFont("helvetica", "normal");
-    industries.forEach((industry: any) => {
-      if (y > 270) { doc.addPage(); y = 20; }
-      const filtered = allSalaryData.filter((d: any) => d.industry === industry);
-      const avg = Math.round(filtered.reduce((sum: number, d: any) => sum + (d.salary_min + d.salary_max) / 2, 0) / filtered.length);
-      doc.text(`${industry}: KES ${avg.toLocaleString()} avg (${filtered.length} jobs)`, 25, y);
-      y += 7;
-    });
-  }
-
-  // Footer
-  const totalPages = doc.getNumberOfPages();
-  for (let i = 1; i <= totalPages; i++) {
-    doc.setPage(i);
     doc.setFillColor(24, 95, 165);
-    doc.rect(0, 285, pageW, 12, "F");
-    doc.setTextColor(200, 220, 255);
-    doc.setFontSize(8);
-    doc.text("luravo.com · Luravoteam@gmail.com · Every Job. Every Salary. No Exceptions.", pageW / 2, 292, { align: "center" });
-    doc.setTextColor(150, 180, 220);
-    doc.text(`Page ${i} of ${totalPages}`, pageW - 15, 292, { align: "right" });
-  }
+    doc.rect(0, 0, pageW, 40, "F");
 
-  doc.save(`Luravo_Enterprise_Report_${sub.email.split("@")[0]}_${new Date().toLocaleDateString("en-KE").replace(/\//g, "-")}.pdf`);
-  showNotification("Professional PDF report downloaded!");
-};
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(24);
+    doc.setFont("helvetica", "bold");
+    doc.text("lura", 20, 22);
+    doc.setTextColor(77, 168, 232);
+    doc.text("vo", 44, 22);
+
+    doc.setTextColor(200, 220, 255);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text("SALARY BENCHMARKING REPORT", 20, 32);
+
+    doc.setTextColor(100, 100, 100);
+    doc.setFontSize(9);
+    doc.text(`Generated: ${new Date().toLocaleDateString("en-KE", { year: "numeric", month: "long", day: "numeric" })}`, pageW - 20, 50, { align: "right" });
+    doc.text(`Prepared for: ${sub.email}`, pageW - 20, 57, { align: "right" });
+    doc.text("Plan: Enterprise", pageW - 20, 64, { align: "right" });
+
+    doc.setFillColor(240, 247, 255);
+    doc.rect(15, 70, pageW - 30, 35, "F");
+    doc.setTextColor(24, 95, 165);
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("EXECUTIVE SUMMARY", 20, 82);
+
+    doc.setTextColor(50, 50, 50);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Total Jobs Posted: ${subJobs?.length || 0}`, 20, 92);
+    doc.text(`Your Average Salary: KES ${avgSalary.toLocaleString()}`, 80, 92);
+    doc.text(`Platform Average: KES ${platformAvg.toLocaleString()}`, 155, 92);
+    doc.text(`Plan Expires: ${new Date(sub.expires_at).toLocaleDateString()}`, 20, 100);
+    doc.text(`Posts Remaining: ${sub.posts_remaining}`, 80, 100);
+    doc.text(`Featured Remaining: ${sub.featured_remaining}`, 155, 100);
+
+    let y = 120;
+    doc.setFillColor(24, 95, 165);
+    doc.rect(15, y - 8, pageW - 30, 10, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.text("YOUR JOB LISTINGS", 20, y);
+
+    y += 10;
+    if (subJobs && subJobs.length > 0) {
+      subJobs.forEach((job: any, i: number) => {
+        if (y > 260) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.setFillColor(i % 2 === 0 ? 249 : 255, i % 2 === 0 ? 250 : 255, i % 2 === 0 ? 252 : 255);
+        doc.rect(15, y, pageW - 30, 18, "F");
+
+        doc.setTextColor(30, 30, 30);
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        doc.text(`${i + 1}. ${job.title}`, 20, y + 7);
+
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(80, 80, 80);
+        doc.setFontSize(8.5);
+        doc.text(`${job.company} - ${job.location} - ${job.level} - ${job.industry}`, 20, y + 13);
+
+        doc.setTextColor(29, 158, 117);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9);
+        const salaryText = job.salary_type === "fixed"
+          ? `KES ${job.salary_min?.toLocaleString()} fixed`
+          : `KES ${job.salary_min?.toLocaleString()} - ${job.salary_max?.toLocaleString()}`;
+        doc.text(salaryText, pageW - 20, y + 10, { align: "right" });
+
+        y += 20;
+      });
+    } else {
+      doc.setTextColor(150, 150, 150);
+      doc.setFontSize(10);
+      doc.text("No jobs posted yet.", 20, y + 10);
+      y += 20;
+    }
+
+    y += 10;
+    if (y > 240) { doc.addPage(); y = 20; }
+
+    doc.setFillColor(24, 95, 165);
+    doc.rect(15, y - 8, pageW - 30, 10, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.text("PLATFORM SALARY INSIGHTS", 20, y);
+
+    y += 12;
+    doc.setTextColor(50, 50, 50);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Total Jobs on Luravo: ${jobs.length}`, 20, y);
+    doc.text(`Total Salary Data Points: ${allSalaryData?.length || 0}`, 100, y);
+    y += 8;
+    doc.text(`Platform Average Salary: KES ${platformAvg.toLocaleString()} per month`, 20, y);
+    y += 8;
+
+    if (allSalaryData && allSalaryData.length > 0) {
+      const industries = Array.from(new Set(allSalaryData.map((d: any) => d.industry)));
+      y += 6;
+      doc.setFont("helvetica", "bold");
+      doc.text("Average by Industry:", 20, y);
+      y += 8;
+      doc.setFont("helvetica", "normal");
+      industries.forEach((industry: any) => {
+        if (y > 270) { doc.addPage(); y = 20; }
+        const filtered = allSalaryData.filter((d: any) => d.industry === industry);
+        const avg = Math.round(filtered.reduce((sum: number, d: any) => sum + (d.salary_min + d.salary_max) / 2, 0) / filtered.length);
+        doc.text(`${industry}: KES ${avg.toLocaleString()} avg (${filtered.length} jobs)`, 25, y);
+        y += 7;
+      });
+    }
+
+    const totalPages = doc.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      doc.setFillColor(24, 95, 165);
+      doc.rect(0, 285, pageW, 12, "F");
+      doc.setTextColor(200, 220, 255);
+      doc.setFontSize(8);
+      doc.text("luravo.com - hello@luravo.com - Every Job. Every Salary. No Exceptions.", pageW / 2, 292, { align: "center" });
+      doc.setTextColor(150, 180, 220);
+      doc.text(`Page ${i} of ${totalPages}`, pageW - 15, 292, { align: "right" });
+    }
+
+    doc.save(`Luravo_Enterprise_Report_${sub.email.split("@")[0]}_${new Date().toLocaleDateString("en-KE").replace(/\//g, "-")}.pdf`);
+    showNotification("PDF report downloaded!");
+  };
 
   const handleAddAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -303,6 +333,10 @@ export default function AdminDashboardPage() {
 
   const isSuperAdmin = admin?.role === "super_admin";
 
+  const newContacts = contacts.filter((c: any) => c.status !== "actioned");
+  const actionedContacts = contacts.filter((c: any) => c.status === "actioned");
+  const sortedContacts = [...newContacts, ...actionedContacts];
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-950 flex items-center justify-center">
@@ -328,7 +362,8 @@ export default function AdminDashboardPage() {
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-6">
           <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 w-full max-w-lg">
             <h3 className="text-white font-bold mb-1">Reply to {replyingTo.name}</h3>
-            <p className="text-gray-500 text-sm mb-4">{replyingTo.email} · {replyingTo.company}</p>
+            <p className="text-gray-500 text-sm mb-1">{replyingTo.email} · {replyingTo.company}</p>
+            {replyingTo.phone && <p className="text-green-400 text-sm mb-4">📞 {replyingTo.phone}</p>}
             <div className="bg-gray-800 rounded-xl p-3 mb-4">
               <p className="text-gray-400 text-xs font-semibold mb-1">Their message:</p>
               <p className="text-gray-300 text-sm">{replyingTo.message}</p>
@@ -351,7 +386,7 @@ export default function AdminDashboardPage() {
               </button>
             </div>
             <p className="text-gray-600 text-xs mt-3 text-center">
-              If email app does not open, copy the message and paste into Gmail or Outlook manually.
+              If the email app does not open, copy the message and paste into Gmail or Outlook manually, then mark the request as actioned.
             </p>
           </div>
         </div>
@@ -387,8 +422,8 @@ export default function AdminDashboardPage() {
               <p className="text-white text-3xl font-bold">{subscriptions.length}</p>
             </div>
             <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-              <p className="text-gray-500 text-xs mb-1">Contact Requests</p>
-              <p className="text-white text-3xl font-bold">{contacts.length}</p>
+              <p className="text-gray-500 text-xs mb-1">New Contact Requests</p>
+              <p className="text-white text-3xl font-bold">{newContacts.length}</p>
             </div>
             <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
               <p className="text-gray-500 text-xs mb-1">Est. Revenue</p>
@@ -415,8 +450,8 @@ export default function AdminDashboardPage() {
               className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition ${activeTab === tab ? "bg-blue-600 text-white" : "text-gray-500 hover:text-white"}`}
             >
               {tab}
-              {tab === "contacts" && contacts.length > 0 && (
-                <span className="ml-2 bg-red-600 text-white text-xs px-1.5 py-0.5 rounded-full">{contacts.length}</span>
+              {tab === "contacts" && newContacts.length > 0 && (
+                <span className="ml-2 bg-red-600 text-white text-xs px-1.5 py-0.5 rounded-full">{newContacts.length}</span>
               )}
             </button>
           ))}
@@ -456,15 +491,15 @@ export default function AdminDashboardPage() {
               </div>
             </div>
 
-            {contacts.length > 0 && (
+            {newContacts.length > 0 && (
               <div className="bg-gray-900 border border-red-900 rounded-2xl p-6 md:col-span-2">
-                <h3 className="text-white font-semibold mb-4">🔴 Pending Contact Requests ({contacts.length})</h3>
+                <h3 className="text-white font-semibold mb-4">🔴 Pending Contact Requests ({newContacts.length})</h3>
                 <div className="flex flex-col gap-3">
-                  {contacts.slice(0, 3).map((contact: any) => (
+                  {newContacts.slice(0, 3).map((contact: any) => (
                     <div key={contact.id} className="flex items-center justify-between border-b border-gray-800 pb-2">
                       <div>
                         <p className="text-white text-sm font-medium">{contact.name} · {contact.company}</p>
-                        <p className="text-gray-500 text-xs">{contact.email}</p>
+                        <p className="text-gray-500 text-xs">{contact.email}{contact.phone ? ` · ${contact.phone}` : ""}</p>
                       </div>
                       <button onClick={() => { setActiveTab("contacts"); handleReply(contact); }} className="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-xs font-semibold hover:bg-blue-700">
                         Reply →
@@ -511,12 +546,12 @@ export default function AdminDashboardPage() {
                         <p className="text-white text-sm">{new Date(job.created_at).toLocaleDateString()}</p>
                       </div>
                       <div>
-                        <p className="text-gray-500 text-xs mb-1">Level</p>
-                        <p className="text-white text-sm">{job.level}</p>
+                        <p className="text-gray-500 text-xs mb-1">Expires</p>
+                        <p className="text-white text-sm">{job.expires_at ? new Date(job.expires_at).toLocaleDateString() : "Not set"}</p>
                       </div>
                       <div>
-                        <p className="text-gray-500 text-xs mb-1">Industry</p>
-                        <p className="text-white text-sm">{job.industry}</p>
+                        <p className="text-gray-500 text-xs mb-1">Level · Industry</p>
+                        <p className="text-white text-sm">{job.level} · {job.industry}</p>
                       </div>
                     </div>
                     <p className="text-gray-500 text-xs mb-1">Description</p>
@@ -553,6 +588,7 @@ export default function AdminDashboardPage() {
                   <div className="flex items-center justify-between flex-wrap gap-4">
                     <div>
                       <p className="text-white font-semibold">{sub.email}</p>
+                      {sub.phone && <p className="text-green-400 text-xs">📞 {sub.phone}</p>}
                       <div className="flex items-center gap-2 mt-1">
                         <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${getPlanColor(sub.plan)}`}>{getPlanLabel(sub.plan)}</span>
                         <span className="text-gray-500 text-xs">Expires: {new Date(sub.expires_at).toLocaleDateString()}</span>
@@ -590,32 +626,67 @@ export default function AdminDashboardPage() {
 
         {activeTab === "contacts" && (
           <div className="flex flex-col gap-4">
-            <h2 className="text-white text-xl font-bold mb-2">Contact Requests ({contacts.length})</h2>
-            {contacts.length === 0 ? (
+            <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+              <h2 className="text-white text-xl font-bold">Contact Requests</h2>
+              <div className="flex gap-3 text-xs">
+                <span className="bg-red-900 text-red-300 px-3 py-1 rounded-full font-semibold">{newContacts.length} new</span>
+                <span className="bg-green-900 text-green-300 px-3 py-1 rounded-full font-semibold">{actionedContacts.length} actioned</span>
+              </div>
+            </div>
+            {sortedContacts.length === 0 ? (
               <div className="bg-gray-900 border border-gray-800 rounded-2xl p-10 text-center">
                 <p className="text-gray-500">No contact requests yet.</p>
               </div>
             ) : (
-              contacts.map((contact: any) => (
-                <div key={contact.id} className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-                  <div className="mb-4">
-                    <p className="text-white font-semibold text-lg">{contact.name}</p>
-                    <p className="text-blue-400 text-sm">{contact.email}</p>
-                    <p className="text-gray-500 text-sm">{contact.company} · {contact.team_size}</p>
-                    <p className="text-green-400 text-sm">📞 {contact.phone}</p>
-                    <p className="text-gray-400 text-sm mt-3 leading-relaxed">{contact.message}</p>
-                    <p className="text-gray-700 text-xs mt-2">{new Date(contact.created_at).toLocaleDateString()}</p>
+              sortedContacts.map((contact: any) => {
+                const isActioned = contact.status === "actioned";
+                return (
+                  <div
+                    key={contact.id}
+                    className={`bg-gray-900 rounded-2xl p-5 border ${isActioned ? "border-gray-800 opacity-70" : "border-red-900"}`}
+                  >
+                    <div className="mb-4">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <p className="text-white font-semibold text-lg">{contact.name}</p>
+                        {isActioned ? (
+                          <span className="bg-green-900 text-green-300 text-xs font-semibold px-2 py-0.5 rounded-full">✓ Actioned</span>
+                        ) : (
+                          <span className="bg-red-900 text-red-300 text-xs font-semibold px-2 py-0.5 rounded-full">New</span>
+                        )}
+                      </div>
+                      <p className="text-blue-400 text-sm">{contact.email}</p>
+                      {contact.phone && (
+                        <a href={`tel:${contact.phone}`} className="text-green-400 text-sm hover:underline">📞 {contact.phone}</a>
+                      )}
+                      <p className="text-gray-500 text-sm">{contact.company} · {contact.team_size}</p>
+                      <p className="text-gray-400 text-sm mt-3 leading-relaxed">{contact.message}</p>
+                      <p className="text-gray-700 text-xs mt-2">Received {new Date(contact.created_at).toLocaleDateString()}</p>
+                      {isActioned && contact.actioned_at && (
+                        <p className="text-gray-600 text-xs mt-1">
+                          Actioned by {contact.actioned_by} on {new Date(contact.actioned_at).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex gap-3 flex-wrap">
+                      <button onClick={() => handleReply(contact)} className="bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700">
+                        ✉️ Reply
+                      </button>
+                      <a href={`mailto:${contact.email}`} className="bg-gray-800 text-gray-300 px-5 py-2 rounded-xl text-sm font-semibold hover:bg-gray-700">
+                        📧 Quick Email
+                      </a>
+                      {isActioned ? (
+                        <button onClick={() => handleReopen(contact)} className="bg-gray-800 text-orange-400 px-5 py-2 rounded-xl text-sm font-semibold hover:bg-gray-700">
+                          ↩ Reopen
+                        </button>
+                      ) : (
+                        <button onClick={() => handleMarkActioned(contact)} className="bg-green-900 text-green-300 px-5 py-2 rounded-xl text-sm font-semibold hover:bg-green-800">
+                          ✓ Mark as Actioned
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex gap-3 flex-wrap">
-                    <button onClick={() => handleReply(contact)} className="bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700">
-                      ✉️ Reply
-                    </button>
-                    <a href={`mailto:${contact.email}`} className="bg-gray-800 text-gray-300 px-5 py-2 rounded-xl text-sm font-semibold hover:bg-gray-700">
-                      📧 Quick Email
-                    </a>
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         )}
